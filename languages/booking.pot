@@ -24,7 +24,7 @@ msgstr ""
 msgid "%1$s, %2$s to %3$s"
 msgstr ""
 
-#: settings.php:159
+#: settings.php:191
 msgid "0 means no limit."
 msgstr ""
 
@@ -56,7 +56,7 @@ msgstr ""
 msgid "All bookings"
 msgstr ""
 
-#: src/Http/Front.php:117
+#: src/Http/Front.php:118
 msgid "Almost done: we sent you an e-mail. Open the link in it to send your request."
 msgstr ""
 
@@ -68,12 +68,12 @@ msgstr ""
 msgid "Book a time"
 msgstr ""
 
-#: src/Ical.php:52
-msgid "Booked"
-msgstr ""
-
 #: settings.php:48
 msgid "Booking"
+msgstr ""
+
+#: src/Ical.php:52
+msgid "Booking #%1$d (%2$s)"
 msgstr ""
 
 #: settings.php:69
@@ -81,7 +81,7 @@ msgstr ""
 msgid "Booking Calendar"
 msgstr ""
 
-#: index.php:54
+#: index.php:55
 msgid "Booking Calendar needs Shopclass 7.0 and is switched off. Update Shopclass to use it."
 msgstr ""
 
@@ -117,11 +117,11 @@ msgstr ""
 msgid "Booking settings"
 msgstr ""
 
-#: src/Http/Front.php:231
+#: src/Http/Front.php:234
 msgid "Booking settings saved."
 msgstr ""
 
-#: src/Http/Front.php:238
+#: src/Http/Front.php:241
 msgid "Booking updated. We e-mailed the buyer."
 msgstr ""
 
@@ -163,7 +163,7 @@ msgstr ""
 msgid "Cancel this booking"
 msgstr ""
 
-#: src/Http/Front.php:183
+#: src/Http/Front.php:185
 msgid "Cancel your booking"
 msgstr ""
 
@@ -207,7 +207,7 @@ msgstr ""
 msgid "Confirm requests at once, without asking me"
 msgstr ""
 
-#: src/Http/Front.php:182
+#: src/Http/Front.php:184
 msgid "Confirm your booking request"
 msgstr ""
 
@@ -218,6 +218,10 @@ msgstr ""
 #: src/Status.php:103
 #: views/account.php:153
 msgid "Confirmed"
+msgstr ""
+
+#: settings.php:152
+msgid "Counts requests from the site and the API. 0 means no limit."
 msgstr ""
 
 #: views/calendar.php:94
@@ -246,6 +250,10 @@ msgstr ""
 
 #: settings.php:103
 msgid "Defaults and limits"
+msgstr ""
+
+#: src/BookingStore.php:459
+msgid "Deleted user"
 msgstr ""
 
 #: views/calendar.php:104
@@ -284,11 +292,11 @@ msgstr ""
 msgid "Go to the home page"
 msgstr ""
 
-#: settings.php:158
+#: settings.php:190
 msgid "Guest requests per hour from one address"
 msgstr ""
 
-#: settings.php:146
+#: settings.php:178
 msgid "Guests"
 msgstr ""
 
@@ -312,8 +320,12 @@ msgstr ""
 msgid "Let buyers book listings for dates or time slots. Choose which categories take bookings; sellers turn it on for each listing from their account."
 msgstr ""
 
-#: settings.php:151
+#: settings.php:183
 msgid "Let visitors without an account send requests"
+msgstr ""
+
+#: settings.php:146
+msgid "Limits per buyer"
 msgstr ""
 
 #: admin/bookings.php:48
@@ -324,11 +336,11 @@ msgstr ""
 msgid "Make a new address and stop the old one"
 msgstr ""
 
-#: views/calendar.php:122
+#: views/calendar.php:126
 msgid "Manage bookings for this listing"
 msgstr ""
 
-#: views/calendar.php:110
+#: views/calendar.php:114
 msgid "Message to the seller (optional)"
 msgstr ""
 
@@ -402,7 +414,7 @@ msgstr ""
 msgid "Pages"
 msgstr ""
 
-#: views/calendar.php:107
+#: views/calendar.php:111
 msgid "Phone (optional)"
 msgstr ""
 
@@ -426,7 +438,7 @@ msgstr ""
 msgid "Pick your check-in date."
 msgstr ""
 
-#: src/BookingException.php:76
+#: src/BookingException.php:78
 msgid "Please check the details and try again."
 msgstr ""
 
@@ -434,11 +446,11 @@ msgstr ""
 msgid "Please confirm your booking request. The seller only sees it once you do."
 msgstr ""
 
-#: src/BookingService.php:135
+#: src/BookingService.php:157
 msgid "Please give your name and a valid e-mail address."
 msgstr ""
 
-#: src/BookingException.php:73
+#: src/BookingException.php:75
 msgid "Please sign in to send a booking request."
 msgstr ""
 
@@ -450,12 +462,12 @@ msgstr ""
 msgid "Price note"
 msgstr ""
 
-#: src/Ical.php:52
-msgid "Request"
-msgstr ""
-
 #: views/account.php:165
 msgid "Requests for your listings"
+msgstr ""
+
+#: settings.php:151
+msgid "Requests per hour from one account"
 msgstr ""
 
 #: settings.php:26
@@ -482,7 +494,7 @@ msgstr ""
 msgid "Send a booking e-mail"
 msgstr ""
 
-#: views/calendar.php:116
+#: views/calendar.php:120
 msgid "Send booking request"
 msgstr ""
 
@@ -498,7 +510,7 @@ msgstr ""
 msgid "Shown above the calendar, such as \"80 a night, cleaning 30\"."
 msgstr ""
 
-#: views/calendar.php:118
+#: views/calendar.php:122
 msgid "Sign in to send a booking request."
 msgstr ""
 
@@ -542,7 +554,7 @@ msgstr ""
 msgid "That is too far ahead to book yet."
 msgstr ""
 
-#: src/BookingService.php:236
+#: src/BookingService.php:269
 msgid "That link has expired. Please send the request again."
 msgstr ""
 
@@ -558,8 +570,8 @@ msgstr ""
 msgid "That time has already passed."
 msgstr ""
 
-#: src/Http/Front.php:154
-#: src/Http/Front.php:242
+#: src/Http/Front.php:156
+#: src/Http/Front.php:245
 msgid "The booking is cancelled. We let the seller know."
 msgstr ""
 
@@ -591,7 +603,7 @@ msgstr ""
 msgid "There are no categories yet."
 msgstr ""
 
-#: settings.php:152
+#: settings.php:184
 msgid "They confirm their e-mail address with a link before the seller sees the request."
 msgstr ""
 
@@ -608,7 +620,7 @@ msgstr ""
 msgid "This booking was cancelled."
 msgstr ""
 
-#: src/Http/Front.php:183
+#: src/Http/Front.php:185
 msgid "This link does not work"
 msgstr ""
 
@@ -620,7 +632,8 @@ msgstr ""
 msgid "This listing does not take bookings."
 msgstr ""
 
-#: src/BookingService.php:248
+#: src/BookingService.php:266
+#: src/BookingService.php:281
 msgid "This request was already confirmed."
 msgstr ""
 
@@ -656,12 +669,21 @@ msgstr ""
 msgid "Unanswered requests expire after (hours)"
 msgstr ""
 
-#: settings.php:163
+#: settings.php:155
+#: settings.php:195
 msgid "Use 0 to 1000."
 msgstr ""
 
 #: settings.php:122
 msgid "Use 1 to %d nights."
+msgstr ""
+
+#: settings.php:164
+msgid "Use 1 to 100."
+msgstr ""
+
+#: settings.php:173
+msgid "Use 1 to 1000."
 msgstr ""
 
 #: settings.php:141
@@ -684,7 +706,15 @@ msgstr ""
 msgid "Waiting for reply"
 msgstr ""
 
-#: views/calendar.php:114
+#: settings.php:169
+msgid "Waiting requests one buyer may have in all"
+msgstr ""
+
+#: settings.php:160
+msgid "Waiting requests one buyer may have on one listing"
+msgstr ""
+
+#: views/calendar.php:118
 msgid "We will e-mail you a link to confirm your request."
 msgstr ""
 
@@ -696,11 +726,15 @@ msgstr ""
 msgid "When"
 msgstr ""
 
+#: src/BookingException.php:73
+msgid "You already have the most waiting requests allowed. Wait for the seller to reply, or cancel one."
+msgstr ""
+
 #: src/BookingException.php:65
 msgid "You can only manage bookings for your own listings."
 msgstr ""
 
-#: src/BookingService.php:138
+#: src/BookingService.php:160
 msgid "You cannot book your own listing."
 msgstr ""
 
@@ -712,12 +746,16 @@ msgstr ""
 msgid "You have not booked anything yet."
 msgstr ""
 
+#: views/calendar.php:107
+msgid "Your account address. Change it in your account settings."
+msgstr ""
+
 #: src/Notifier.php:173
 msgid "Your booking is confirmed."
 msgstr ""
 
-#: src/Http/Front.php:112
-#: src/Http/Front.php:149
+#: src/Http/Front.php:113
+#: src/Http/Front.php:151
 msgid "Your booking is confirmed. We sent you an e-mail with the details."
 msgstr ""
 
@@ -737,8 +775,8 @@ msgstr ""
 msgid "Your name"
 msgstr ""
 
-#: src/Http/Front.php:113
-#: src/Http/Front.php:150
+#: src/Http/Front.php:114
+#: src/Http/Front.php:152
 msgid "Your request was sent. The seller will accept or decline it, and we will e-mail you."
 msgstr ""
 

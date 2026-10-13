@@ -135,7 +135,7 @@ $car      = seed_item($admin, $carsCat, $seller, 'Old car');
 $admin->query("UPDATE {$p}t_item SET s_contact_email = 'seller@example.test'");
 
 Config::$parents = static fn (int $id): array => $id === $cottages ? array($rentals) : array();
-$config = new Config(array($rentals => A::NIGHTS, $services => A::SLOTS), 60, 2, 60, 48, true, 5, 'Europe/London');
+$config = new Config(array($rentals => A::NIGHTS, $services => A::SLOTS), 60, 2, 60, 48, true, 5, 'Europe/London', 100, 3, 10);
 $mails  = array();
 $notifier = new Notifier(
     $config->tz(),
@@ -173,19 +173,22 @@ pin('a category without booking is off', 'off', $reason(static fn () => $service
 harness_section('a stay');
 
 $mails = array();
-$stay  = $service->book($service->prepare($req(array('item' => $cottage, 'start' => $day(5), 'end' => $day(8))), $buyer));
+$stay  = $service->book($service->prepare($req(array('item' => $cottage, 'start' => $day(5), 'end' => $day(8))), $buyer, 'buyer@example.test'));
 pin('the request waits for the seller', Status::PENDING, $stay['s_status']);
 pin('it belongs to the buyer', $buyer, (int) $stay['fk_i_user_id']);
 pin('both sides are mailed', array('buyer@example.test', 'seller@example.test'), array_column($mails, 'to'));
 pin('it starts at local midnight, stored in UTC', A::dayStart($day(5), $tz), (int) \mindstellar\database\UtcDatetime::parse($stay['dt_start']));
-pin('an overlapping stay is refused', 'taken', $reason(static fn () => $service->book($service->prepare($req(array('item' => $cottage, 'start' => $day(7), 'end' => $day(9))), $buyer))));
-pin('so is one that wraps it', 'taken', $reason(static fn () => $service->book($service->prepare($req(array('item' => $cottage, 'start' => $day(4), 'end' => $day(10))), $buyer))));
-$next = $service->book($service->prepare($req(array('item' => $cottage, 'start' => $day(8), 'end' => $day(10))), $buyer));
+pin('an overlapping stay is refused', 'taken', $reason(static fn () => $service->book($service->prepare($req(array('item' => $cottage, 'start' => $day(7), 'end' => $day(9))), $buyer, 'buyer@example.test'))));
+pin('so is one that wraps it', 'taken', $reason(static fn () => $service->book($service->prepare($req(array('item' => $cottage, 'start' => $day(4), 'end' => $day(10))), $buyer, 'buyer@example.test'))));
+$next = $service->book($service->prepare($req(array('item' => $cottage, 'start' => $day(8), 'end' => $day(10))), $buyer, 'buyer@example.test'));
 pin('one that starts on the check-out day is fine', Status::PENDING, $next['s_status']);
-pin('too short a stay', 'min_nights', $reason(static fn () => $service->prepare($req(array('item' => $cottage, 'start' => $day(20), 'end' => $day(21))), $buyer)));
-pin('a stay over closed dates', 'blocked', $reason(static fn () => $service->prepare($req(array('item' => $cottage, 'start' => $day(29), 'end' => $day(32))), $buyer)));
-pin('the seller cannot book their own listing', 'input', $reason(static fn () => $service->prepare($req(array('item' => $cottage, 'start' => $day(20), 'end' => $day(23))), $seller)));
-pin('a bad e-mail address', 'input', $reason(static fn () => $service->prepare($req(array('item' => $cottage, 'start' => $day(20), 'end' => $day(23), 'email' => 'nope')), $buyer)));
+pin('too short a stay', 'min_nights', $reason(static fn () => $service->prepare($req(array('item' => $cottage, 'start' => $day(20), 'end' => $day(21))), $buyer, 'buyer@example.test')));
+pin('a stay over closed dates', 'blocked', $reason(static fn () => $service->prepare($req(array('item' => $cottage, 'start' => $day(29), 'end' => $day(32))), $buyer, 'buyer@example.test')));
+pin('the seller cannot book their own listing', 'input', $reason(static fn () => $service->prepare($req(array('item' => $cottage, 'start' => $day(20), 'end' => $day(23))), $seller, 'seller@example.test')));
+pin('a guest with a bad e-mail address', 'input', $reason(static fn () => $service->prepare($req(array('item' => $cottage, 'start' => $day(20), 'end' => $day(23), 'email' => 'nope')))));
+$forced = $service->prepare($req(array('item' => $cottage, 'start' => $day(20), 'end' => $day(23), 'email' => 'relay@victim.test')), $buyer, 'buyer@example.test');
+pin('a signed-in buyer always books with their account address', 'buyer@example.test', $forced['email']);
+pin('an account without an address cannot book', 'input', $reason(static fn () => $service->prepare($req(array('item' => $cottage, 'start' => $day(20), 'end' => $day(23))), $buyer, '')));
 
 $month = $service->month($cottage, A::NIGHTS, $store->listing($cottage), $day(5));
 pin('the calendar shows the booked nights', A::BOOKED, $month['days'][$day(5)]);
@@ -199,7 +202,7 @@ $other->query("SELECT fk_i_item_id FROM {$p}t_booking_listing WHERE fk_i_item_id
 Db::execute('SET SESSION innodb_lock_wait_timeout = 1');
 $waited = null;
 try {
-    $service->book($service->prepare($req(array('item' => $cottage, 'start' => $day(12), 'end' => $day(14))), $buyer));
+    $service->book($service->prepare($req(array('item' => $cottage, 'start' => $day(12), 'end' => $day(14))), $buyer, 'buyer@example.test'));
 } catch (DbException $e) {
     $waited = $e->getCode();
 }
@@ -208,17 +211,17 @@ pin('and wrote nothing', 0, (int) $scalar("SELECT COUNT(*) FROM {$p}t_booking WH
 $other->query("INSERT INTO {$p}t_booking (fk_i_item_id, s_mode, dt_start, dt_end, s_status, b_hold, dt_created, dt_updated) VALUES ({$cottage}, 'nights', '"
     . \mindstellar\database\UtcDatetime::format(A::dayStart($day(12), $tz)) . "', '" . \mindstellar\database\UtcDatetime::format(A::dayStart($day(13), $tz)) . "', 'confirmed', 1, NOW(), NOW())");
 $other->query('COMMIT');
-pin('once the first commits, its night is seen as taken', 'taken', $reason(static fn () => $service->book($service->prepare($req(array('item' => $cottage, 'start' => $day(12), 'end' => $day(14))), $buyer))));
+pin('once the first commits, its night is seen as taken', 'taken', $reason(static fn () => $service->book($service->prepare($req(array('item' => $cottage, 'start' => $day(12), 'end' => $day(14))), $buyer, 'buyer@example.test'))));
 Db::execute('SET SESSION innodb_lock_wait_timeout = 50');
 $other->close();
 
 harness_section('slots and the unique key');
 
 $slotAt = $day(3) . 'T10:00';
-$slot   = $service->book($service->prepare($req(array('item' => $barber, 'start' => $slotAt)), $buyer));
+$slot   = $service->book($service->prepare($req(array('item' => $barber, 'start' => $slotAt)), $buyer, 'buyer@example.test'));
 pin('an hour is booked', 3600, (int) \mindstellar\database\UtcDatetime::parse($slot['dt_end']) - (int) \mindstellar\database\UtcDatetime::parse($slot['dt_start']));
-pin('the same slot again is refused', 'taken', $reason(static fn () => $service->book($service->prepare($req(array('item' => $barber, 'start' => $slotAt)), $buyer))));
-pin('a time off the grid is refused', 'slot', $reason(static fn () => $service->prepare($req(array('item' => $barber, 'start' => $day(3) . 'T10:30')), $buyer)));
+pin('the same slot again is refused', 'taken', $reason(static fn () => $service->book($service->prepare($req(array('item' => $barber, 'start' => $slotAt)), $buyer, 'buyer@example.test'))));
+pin('a time off the grid is refused', 'slot', $reason(static fn () => $service->prepare($req(array('item' => $barber, 'start' => $day(3) . 'T10:30')), $buyer, 'buyer@example.test')));
 $dupe = 0;
 try {
     $admin->query("INSERT INTO {$p}t_booking (fk_i_item_id, s_mode, dt_start, dt_end, s_status, b_hold, dt_created, dt_updated) VALUES ({$barber}, 'slots', '{$slot['dt_start']}', '{$slot['dt_end']}', 'pending', 1, NOW(), NOW())");
@@ -245,13 +248,13 @@ pin('the buyer cancels it', Status::CANCELLED, $gone['s_status']);
 pin('it no longer holds its dates', null, $gone['b_hold']);
 pin('it says who closed it', Status::BUYER, $gone['s_closed_by']);
 pin('a cancelled booking cannot be accepted', 'status', $reason(static fn () => $service->move((int) $stay['pk_i_id'], Status::CONFIRMED, Status::SELLER, $seller)));
-$again = $service->book($service->prepare($req(array('item' => $cottage, 'start' => $day(5), 'end' => $day(7))), $buyer));
+$again = $service->book($service->prepare($req(array('item' => $cottage, 'start' => $day(5), 'end' => $day(7))), $buyer, 'buyer@example.test'));
 pin('its dates can be booked again', Status::PENDING, $again['s_status']);
 pin('a guest cancels with the address the link was sent to', Status::CANCELLED, $service->move((int) $again['pk_i_id'], Status::CANCELLED, Status::BUYER, 0, 'BUYER@example.test')['s_status']);
 
 harness_section('expiry');
 
-$old = $service->book($service->prepare($req(array('item' => $barber, 'start' => $day(4) . 'T09:00')), $buyer));
+$old = $service->book($service->prepare($req(array('item' => $barber, 'start' => $day(4) . 'T09:00')), $buyer, 'buyer@example.test'));
 $admin->query("UPDATE {$p}t_booking SET dt_created = DATE_SUB(UTC_TIMESTAMP(), INTERVAL 3 DAY) WHERE pk_i_id = " . (int) $old['pk_i_id']);
 $mails   = array();
 $expired = $service->expire();
@@ -260,27 +263,30 @@ pin('it is marked expired', Status::EXPIRED, $store->find((int) $old['pk_i_id'])
 pin('both sides hear', 2, count($mails));
 pin('a fresh request stays', Status::PENDING, $store->find((int) $slot['pk_i_id'])['s_status']);
 pin('running it again does nothing', 0, $service->expire());
-pin('the expired slot is free again', Status::PENDING, $service->book($service->prepare($req(array('item' => $barber, 'start' => $day(4) . 'T09:00')), $buyer))['s_status']);
+pin('the expired slot is free again', Status::PENDING, $service->book($service->prepare($req(array('item' => $barber, 'start' => $day(4) . 'T09:00')), $buyer, 'buyer@example.test'))['s_status']);
 
 harness_section('guests');
 
 $mails = array();
 $guest = $service->prepare($req(array('item' => $cottage, 'start' => $day(15), 'end' => $day(17), 'name' => 'Gus', 'email' => 'gus@example.test')));
 $token = $service->askGuest($guest);
-pin('nothing is stored yet', 0, (int) $scalar("SELECT COUNT(*) FROM {$p}t_booking WHERE s_email = 'gus@example.test'"));
+pin('nothing is booked yet', 0, (int) $scalar("SELECT COUNT(*) FROM {$p}t_booking WHERE s_email = 'gus@example.test'"));
 pin('the guest gets the link', array('gus@example.test'), array_column($mails, 'to'));
-$once  = static fn (string $t): bool => osc_kv_claim(Plugin::FOLDER, 'used:' . sha1($t), 3600);
-$made  = $service->confirmGuest($token, $once);
+check('the link carries none of their details', strpos((string) base64_decode(strtr(explode('.', $token)[0], '-_', '+/')), 'gus') === false);
+$kept = $store->guest((string) \mindstellar\booking\Token::openRequest($token));
+pin('the request waits on the server', 'gus@example.test', $kept['email'] ?? null);
+$made = $service->confirmGuest($token);
 pin('the link makes the booking', 'gus@example.test', $made['s_email']);
 pin('with no account', null, $made['fk_i_user_id']);
-pin('the link works once', 'used', $reason(static fn () => $service->confirmGuest($token, $once)));
-pin('a broken link does nothing', 'expired', $reason(static fn () => $service->confirmGuest($token . 'x', $once)));
+pin('the kept request is gone', null, $store->guest((string) \mindstellar\booking\Token::openRequest($token)));
+pin('the link works once', 'used', $reason(static fn () => $service->confirmGuest($token)));
+pin('a broken link does nothing', 'expired', $reason(static fn () => $service->confirmGuest($token . 'x')));
 
 harness_section('auto-confirm');
 
 $service->saveListing($cottage, $seller, array('enabled' => true, 'auto_confirm' => true, 'min_nights' => 2));
 $mails = array();
-$auto  = $service->book($service->prepare($req(array('item' => $cottage, 'start' => $day(40), 'end' => $day(42))), $buyer));
+$auto  = $service->book($service->prepare($req(array('item' => $cottage, 'start' => $day(40), 'end' => $day(42))), $buyer, 'buyer@example.test'));
 pin('the booking is confirmed at once', Status::CONFIRMED, $auto['s_status']);
 check('and the mails say so', strpos((string) $mails[0]['subject'], 'confirmed') !== false);
 pin('saving cleared the closed dates left out of the box', array(), $store->blocked($cottage, $today, $day(60)));
@@ -295,10 +301,61 @@ $counts = $store->countByStatus();
 pin('the admin counts by status', array(4, 2, 1, 2, 1), array($counts['pending'], $counts['confirmed'], $counts['declined'], $counts['cancelled'], $counts['expired']));
 $ics = Ical::build('Sea cottage', 'example.test', $store->feed($cottage, time() - 86400), $tz, time());
 pin('the feed lists the stays that hold dates', 4, substr_count($ics, 'BEGIN:VEVENT'));
+check('the feed names bookings by number', strpos($ics, 'SUMMARY:Booking #') !== false);
+check('and carries no buyer name', strpos($ics, 'Bea Buyer') === false && strpos($ics, 'Gus') === false);
+
+harness_section('limits per buyer');
+
+$service->saveListing($cottage, $seller, array('enabled' => true, 'min_nights' => 2));
+$carl    = seed_user($admin, 'carl', 'carl@example.test');
+$limited = new BookingService(new Config(array($rentals => A::NIGHTS, $services => A::SLOTS), 60, 2, 60, 48, true, 5, 'Europe/London', 2, 2, 3), $store, $notifier);
+$asCarl  = static fn (array $in): array => $limited->prepare($req($in), $carl, 'carl@example.test');
+$limited->throttleUser($carl);
+$limited->throttleUser($carl);
+pin('a third request in the hour is refused', 'limit', $reason(static fn () => $limited->throttleUser($carl)));
+pin('another account has its own count', 'none', $reason(static fn () => $limited->throttleUser($stranger)));
+$limited->book($asCarl(array('item' => $cottage, 'start' => $day(50), 'end' => $day(52))));
+$limited->book($asCarl(array('item' => $cottage, 'start' => $day(52), 'end' => $day(54))));
+pin('a third waiting request on one listing is refused', 'open', $reason(static fn () => $limited->book($asCarl(array('item' => $cottage, 'start' => $day(54), 'end' => $day(56))))));
+$limited->book($asCarl(array('item' => $barber, 'start' => $day(5) . 'T09:00')));
+pin('so is one past the total', 'open', $reason(static fn () => $limited->book($asCarl(array('item' => $barber, 'start' => $day(5) . 'T10:00')))));
+$service->move((int) $store->forBuyer($carl)[0]['pk_i_id'], Status::CANCELLED, Status::BUYER, $carl);
+pin('cancelling one makes room', Status::PENDING, $limited->book($asCarl(array('item' => $barber, 'start' => $day(5) . 'T10:00')))['s_status']);
+
+harness_section('bounds');
+
+$service->saveListing($cottage, $seller, array('enabled' => true, 'min_nights' => 2, 'blocked' => '2000-01-01..2099-12-31'));
+$blocked = $store->blocked($cottage, '1900-01-01', '2999-12-31');
+pin('closed dates start today', $today, $blocked[0]);
+pin('and stop at the last bookable day', $day(60), end($blocked));
+$service->saveListing($cottage, $seller, array('enabled' => true, 'min_nights' => 2, 'blocked' => ''));
+pin('a month far ahead shows the last bookable month', substr($day(60), 0, 7), $service->month($cottage, A::NIGHTS, $store->listing($cottage), '2099-05-01')['month']);
+pin('a month in the past shows this month', substr($today, 0, 7), $service->month($cottage, A::NIGHTS, $store->listing($cottage), '1999-05-01')['month']);
+
+harness_section('personal data');
+
+$mails = array();
+$asGuest = $service->confirmGuest($service->askGuest($service->prepare($req(array('item' => $cottage, 'start' => $day(44), 'end' => $day(46), 'email' => 'buyer@example.test')))));
+osc_add_filter('personal_data_export', array(\mindstellar\booking\Privacy::class, 'export'));
+$export = osc_apply_filter('personal_data_export', array('data' => array()), $buyer);
+$rows   = $export['data']['booking_requests']['rows'] ?? array();
+$ids    = array_map('intval', array_column($rows, 'pk_i_id'));
+pin('the buyer gets every booking from their account', count($store->forBuyer($buyer)) + 1, count($rows));
+check('and the guest one made with their address', in_array((int) $asGuest['pk_i_id'], $ids, true));
+check('but nobody else\'s', !in_array('gus@example.test', array_column($rows, 's_email'), true) && !in_array('carl@example.test', array_column($rows, 's_email'), true));
+pin('it says how long it is kept', 'deleted', $export['data']['booking_requests']['retention']);
+pin('a seller gets none of their buyers\' requests', array(), osc_apply_filter('personal_data_export', array('data' => array()), $seller)['data']['booking_requests']['rows']);
+osc_add_hook('delete_user', array(\mindstellar\booking\Privacy::class, 'deleteUser'));
+osc_run_hook('delete_user', $buyer);
+pin('deleting the account leaves no booking with their details', 0, (int) $scalar("SELECT COUNT(*) FROM {$p}t_booking WHERE fk_i_user_id = {$buyer} OR s_email = 'buyer@example.test'"));
+pin('their bookings stay for the seller, anonymous', 'Deleted user', $store->find((int) $asGuest['pk_i_id'])['s_name']);
+pin('and the ones still holding dates are cancelled', 0, (int) $scalar("SELECT COUNT(*) FROM {$p}t_booking WHERE s_name = 'Deleted user' AND b_hold = 1"));
+pin('other buyers are untouched', 'gus@example.test', $store->find((int) $made['pk_i_id'])['s_email']);
 
 harness_section('cleanup');
 
-$store->forgetItem($barber);
+osc_add_hook('after_delete_item', array(Plugin::class, 'itemDeleted'));
+osc_run_hook('after_delete_item', $barber, array('pk_i_id' => $barber));
 pin('a deleted listing takes its bookings', 0, (int) $scalar("SELECT COUNT(*) FROM {$p}t_booking WHERE fk_i_item_id = {$barber}"));
 pin('and its settings', null, $store->listing($barber));
 osc_kv_set(Plugin::FOLDER, 'probe', 1);

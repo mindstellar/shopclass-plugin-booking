@@ -30,7 +30,7 @@ final class BookingException extends RuntimeException
 
     /**
      * The short reason: taken, past, beyond, dates, min_nights, max_nights, blocked, slot,
-     * off, owner, not_found, status, input or limit.
+     * off, owner, not_found, status, input, limit or open.
      */
     public function reason(): string
     {
@@ -69,6 +69,8 @@ final class BookingException extends RuntimeException
                 return __('That booking cannot be changed that way any more.', 'booking');
             case 'limit':
                 return __('Too many requests from your address. Please try again later.', 'booking');
+            case 'open':
+                return __('You already have the most waiting requests allowed. Wait for the seller to reply, or cancel one.', 'booking');
             case 'guests':
                 return __('Please sign in to send a booking request.', 'booking');
         }

@@ -18,7 +18,7 @@ use mindstellar\security\SigningKey;
 
 /**
  * Links sent by e-mail, signed with the site's key: a guest confirming a request, a guest
- * cancelling a booking, and a listing's calendar feed.
+ * cancelling a booking, and a listing's calendar feed. No link carries a person's details.
  */
 final class Token
 {
@@ -29,23 +29,30 @@ final class Token
     public const REQUEST_TTL = 86400;
 
     /**
-     * A guest's request, carried whole in the link so nothing is stored until it is confirmed.
-     *
-     * @param array<string,mixed> $request item, start, end, name, email, phone, note
+     * A guest's link: only the random id their request is kept under on the server.
      */
-    public static function request(array $request, ?int $now = null): string
+    public static function request(string $id, ?int $now = null): string
     {
-        return SignedPayload::pack(self::REQUEST, $request, self::REQUEST_TTL, 0, $now);
+        return SignedPayload::pack(self::REQUEST, array('g' => $id), self::REQUEST_TTL, 0, $now);
     }
 
     /**
-     * The request in a link, or null when it is forged or expired.
-     *
-     * @return array<string,mixed>|null
+     * The request id in a link, or null when it is forged or expired.
      */
-    public static function openRequest(string $token, ?int $now = null): ?array
+    public static function openRequest(string $token, ?int $now = null): ?string
     {
-        return SignedPayload::unpack(self::REQUEST, $token, $now);
+        $data = SignedPayload::unpack(self::REQUEST, $token, $now);
+        $id   = is_array($data) ? (string) ($data['g'] ?? '') : '';
+
+        return preg_match('/^[a-f0-9]{32}$/', $id) ? $id : null;
+    }
+
+    /**
+     * A new random request id.
+     */
+    public static function newId(): string
+    {
+        return bin2hex(random_bytes(16));
     }
 
     /**

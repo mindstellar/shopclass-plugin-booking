@@ -412,22 +412,24 @@ final class Availability
 
     /**
      * Read blocked dates as a seller typed them: one date or "from..to" range per line or comma.
-     * Ranges longer than a year are cut to a year.
+     * Only dates from $from to $to count, and only the first $maxParts entries are read.
      *
      * @return string[] sorted, unique dates
      */
-    public static function parseBlocked(string $text): array
+    public static function parseBlocked(string $text, string $from, string $to, int $maxParts = 100): array
     {
+        $parts = array_slice(preg_split('/[\s,;]+/', trim($text), -1, PREG_SPLIT_NO_EMPTY) ?: array(), 0, max(0, $maxParts));
         $dates = array();
-        foreach (preg_split('/[\s,;]+/', trim($text), -1, PREG_SPLIT_NO_EMPTY) ?: array() as $part) {
+        foreach ($parts as $part) {
             $range = explode('..', $part, 2);
-            $from  = $range[0];
-            $to    = $range[1] ?? $from;
-            if (!self::validDate($from) || !self::validDate($to) || $to < $from) {
+            $start = $range[0];
+            $end   = $range[1] ?? $start;
+            if (!self::validDate($start) || !self::validDate($end) || $end < $start) {
                 continue;
             }
-            $to = min($to, self::addDays($from, 366));
-            for ($d = $from; $d <= $to; $d = self::addDays($d, 1)) {
+            $start = max($start, $from);
+            $end   = min($end, $to);
+            for ($d = $start; $d <= $end; $d = self::addDays($d, 1)) {
                 $dates[$d] = true;
             }
         }
@@ -435,6 +437,16 @@ final class Availability
         sort($dates);
 
         return $dates;
+    }
+
+    /**
+     * The first of the month $date is in, moved inside the months from $first to $last.
+     */
+    public static function clampMonth(string $date, string $first, string $last): string
+    {
+        $month = self::monthStart(self::validDate($date) ? $date : $first);
+
+        return min(max($month, self::monthStart($first)), self::monthStart($last));
     }
 
     /**

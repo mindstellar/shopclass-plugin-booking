@@ -43,6 +43,9 @@ final class Config
      * @param bool              $guests      whether visitors without an account may ask
      * @param int               $guestLimit  guest requests an hour from one address
      * @param string            $timezone    the site's time zone
+     * @param int               $userLimit   requests an hour from one account; 0 means no limit
+     * @param int               $openPerListing waiting requests one buyer may have on one listing
+     * @param int               $openTotal   waiting requests one buyer may have in all
      */
     public function __construct(
         public array $categories,
@@ -52,7 +55,10 @@ final class Config
         public int $expiryHours = 48,
         public bool $guests = true,
         public int $guestLimit = 5,
-        public string $timezone = 'UTC'
+        public string $timezone = 'UTC',
+        public int $userLimit = 10,
+        public int $openPerListing = 3,
+        public int $openTotal = 10
     ) {
     }
 
@@ -73,7 +79,10 @@ final class Config
             self::clamp((int) self::value('expiry_hours'), 1, 720, 48),
             (bool) self::value('guests'),
             self::clamp((int) self::value('guest_limit'), 0, 1000, 5),
-            function_exists('osc_timezone') ? (string) osc_timezone() : 'UTC'
+            function_exists('osc_timezone') ? (string) osc_timezone() : 'UTC',
+            self::clamp((int) self::value('user_limit'), 0, 1000, 10),
+            self::clamp((int) self::value('open_per_listing'), 1, 100, 3),
+            self::clamp((int) self::value('open_total'), 1, 1000, 10)
         );
     }
 

@@ -102,8 +102,12 @@ $messages = array(
                     <input type="text" name="name" required maxlength="100" autocomplete="name"
                            value="<?php echo osc_esc_html($booking['signedIn'] ? (string) osc_logged_user_name() : ''); ?>"></label>
                 <label class="booking-field"><span><?php echo osc_esc_html(__('E-mail', $d)); ?></span>
-                    <input type="email" name="email" required maxlength="150" autocomplete="email"
-                           value="<?php echo osc_esc_html($booking['signedIn'] ? (string) osc_logged_user_email() : ''); ?>"></label>
+                    <?php if ($booking['signedIn']) { ?>
+                        <input type="email" readonly value="<?php echo osc_esc_html((string) osc_logged_user_email()); ?>" aria-describedby="<?php echo $uid; ?>-email-hint">
+                        <span class="booking-hint" id="<?php echo $uid; ?>-email-hint"><?php echo osc_esc_html(__('Your account address. Change it in your account settings.', $d)); ?></span>
+                    <?php } else { ?>
+                        <input type="email" name="email" required maxlength="150" autocomplete="email">
+                    <?php } ?></label>
                 <label class="booking-field"><span><?php echo osc_esc_html(__('Phone (optional)', $d)); ?></span>
                     <input type="tel" name="phone" maxlength="40" autocomplete="tel"
                            value="<?php echo osc_esc_html($booking['signedIn'] ? (string) osc_logged_user_phone() : ''); ?>"></label>

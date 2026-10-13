@@ -28,6 +28,7 @@ use mindstellar\booking\Config;
 use mindstellar\booking\Http\Front;
 use mindstellar\booking\ItemPage;
 use mindstellar\booking\Plugin;
+use mindstellar\booking\Privacy;
 
 if (!defined('ABS_PATH')) {
     exit('Direct access is not allowed.');
@@ -79,6 +80,10 @@ osc_add_hook('show_item', array(ItemPage::class, 'prepare'));
 osc_add_hook('item_detail', array(ItemPage::class, 'render'));
 osc_add_filter('user_menu_filter', array(Plugin::class, 'menu'));
 osc_add_hook('after_delete_item', array(Plugin::class, 'itemDeleted'));
+
+// A member's bookings go into their data export, and their details leave with the account.
+osc_add_filter('personal_data_export', array(Privacy::class, 'export'));
+osc_add_hook('delete_user', array(Privacy::class, 'deleteUser'));
 
 // E-mails and expiry run on core's job queue; cron or the worker drains it.
 osc_add_hook('register_jobs', array(Plugin::class, 'registerJobs'));

@@ -348,10 +348,129 @@ final class BookingStore
     public function feed(int $itemId, int $after, int $limit = 1000): array
     {
         return Db::select(
-            'SELECT pk_i_id, s_mode, dt_start, dt_end, s_status, s_name, dt_updated FROM ' . self::t('t_booking')
+            'SELECT pk_i_id, s_mode, dt_start, dt_end, s_status, dt_updated FROM ' . self::t('t_booking')
             . ' WHERE fk_i_item_id = ? AND b_hold = 1 AND dt_end > ? ORDER BY dt_start LIMIT ?',
             array($itemId, UtcDatetime::format($after), $limit)
         );
+    }
+
+    /**
+     * How many requests a buyer has waiting: by account, or by address for a guest, on one
+     * listing or, with $itemId 0, on all.
+     */
+    public function countOpen(int $userId, string $email, int $itemId = 0): int
+    {
+        $sql    = 'SELECT COUNT(*) FROM ' . self::t('t_booking') . ' WHERE s_status = ?';
+        $params = array(Status::PENDING);
+        if ($userId > 0) {
+            $sql     .= ' AND fk_i_user_id = ?';
+            $params[] = $userId;
+        } else {
+            $sql     .= ' AND fk_i_user_id IS NULL AND s_email = ?';
+            $params[] = strtolower($email);
+        }
+        if ($itemId > 0) {
+            $sql     .= ' AND fk_i_item_id = ?';
+            $params[] = $itemId;
+        }
+
+        return (int) Db::scalar($sql, $params);
+    }
+
+    /**
+     * Keep a guest's request until they confirm it, under a random id.
+     *
+     * @param array<string,mixed> $request
+     */
+    public function keepGuest(string $id, array $request, int $ttl): void
+    {
+        osc_kv_set(Plugin::FOLDER, 'guest:' . $id, $request, $ttl);
+    }
+
+    /**
+     * A guest's kept request, or null once it expired or was used.
+     *
+     * @return array<string,mixed>|null
+     */
+    public function guest(string $id): ?array
+    {
+        $request = osc_kv_get(Plugin::FOLDER, 'guest:' . $id);
+
+        return is_array($request) ? $request : null;
+    }
+
+    /**
+     * Whether a guest's request was already booked.
+     */
+    public function guestUsed(string $id): bool
+    {
+        return osc_kv_get(Plugin::FOLDER, 'used:' . $id, false) !== false;
+    }
+
+    /**
+     * Take a guest's request for booking: true for exactly one caller, which also removes it.
+     */
+    public function claimGuest(string $id, int $ttl): bool
+    {
+        if (!osc_kv_claim(Plugin::FOLDER, 'used:' . $id, $ttl)) {
+            return false;
+        }
+        osc_kv_delete(Plugin::FOLDER, 'guest:' . $id);
+
+        return true;
+    }
+
+    /**
+     * A person's own bookings as a buyer: made from their account, or as a guest with its address.
+     *
+     * @return array<int,array<string,mixed>>
+     */
+    public function buyerRows(int $userId, string $email): array
+    {
+        return Db::select(
+            'SELECT b.pk_i_id, b.fk_i_item_id, ' . $this->titleSql('b.fk_i_item_id') . ' AS s_title,'
+            . ' b.s_mode, b.dt_start, b.dt_end, b.s_status, b.s_name, b.s_email, b.s_phone, b.s_note, b.dt_created, b.dt_updated'
+            . ' FROM ' . self::t('t_booking') . ' b WHERE b.fk_i_user_id = ? OR (b.fk_i_user_id IS NULL AND ? <> \'\' AND b.s_email = ?)'
+            . ' ORDER BY b.pk_i_id',
+            array_merge($this->titleParams(), array($userId, $email, strtolower($email)))
+        );
+    }
+
+    /**
+     * Strip a deleted account's details from its bookings as a buyer. Ones still holding dates
+     * are cancelled, as nobody can be reached about them; the seller keeps the dates' history.
+     *
+     * @return int how many bookings were changed
+     */
+    public function anonymiseBuyer(int $userId, string $email): int
+    {
+        $where  = 'fk_i_user_id = ? OR (fk_i_user_id IS NULL AND ? <> \'\' AND s_email = ?)';
+        $params = array($userId, $email, strtolower($email));
+        $items  = Db::select('SELECT DISTINCT fk_i_item_id FROM ' . self::t('t_booking') . ' WHERE b_hold = 1 AND (' . $where . ')', $params);
+        $now    = UtcDatetime::format(time());
+        Db::execute(
+            'UPDATE ' . self::t('t_booking') . ' SET s_status = ?, b_hold = NULL, s_closed_by = ?, dt_updated = ?'
+            . ' WHERE b_hold = 1 AND (' . $where . ')',
+            array_merge(array(Status::CANCELLED, Status::SYSTEM, $now), $params)
+        );
+        $changed = Db::execute(
+            'UPDATE ' . self::t('t_booking') . ' SET fk_i_user_id = NULL, s_name = ?, s_email = \'\', s_phone = \'\', s_note = \'\''
+            . ' WHERE ' . $where,
+            array_merge(array(__('Deleted user', 'booking')), $params)
+        );
+        foreach ($items as $row) {
+            $this->bump((int) $row['fk_i_item_id']);
+        }
+
+        return $changed;
+    }
+
+    /**
+     * An account's e-mail address in lower case, or '' when there is no such account.
+     */
+    public function accountEmail(int $userId): string
+    {
+        return strtolower((string) Db::scalar('SELECT s_email FROM ' . self::t('t_user') . ' WHERE pk_i_id = ?', array($userId)));
     }
 
     /**

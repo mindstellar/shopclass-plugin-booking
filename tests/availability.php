@@ -118,16 +118,21 @@ pin('a weekday with no hours is closed', A::CLOSED, A::slotStates('2026-10-13', 
 
 harness_section('closed dates');
 
-$blocked = A::parseBlocked("2026-12-24..2026-12-26\n2026-12-31, nonsense 2027-01-01");
+$blocked = A::parseBlocked("2026-12-24..2026-12-26\n2026-12-31, nonsense 2027-01-01", '2026-01-01', '2027-12-31');
 pin('ranges and single dates are read', array('2026-12-24', '2026-12-25', '2026-12-26', '2026-12-31', '2027-01-01'), $blocked);
 pin('they print back as ranges', "2026-12-24..2026-12-26\n2026-12-31..2027-01-01", A::formatBlocked($blocked));
-pin('a reversed range is ignored', array(), A::parseBlocked('2026-12-26..2026-12-24'));
-pin('a huge range is cut to a year', 367, count(A::parseBlocked('2026-01-01..2030-01-01')));
+pin('a reversed range is ignored', array(), A::parseBlocked('2026-12-26..2026-12-24', '2026-01-01', '2027-12-31'));
+pin('dates before today and after the window are dropped', array('2026-10-13', '2026-10-14'), A::parseBlocked('2020-01-01..2099-12-31', '2026-10-13', '2026-10-14'));
+pin('only the first entries are read', 2, count(A::parseBlocked(implode(',', A::dates('2026-11-01', '2026-11-11')), '2026-01-01', '2027-12-31', 2)));
 
 harness_section('months');
 
 pin('the first of the month', '2026-10-01', A::monthStart('2026-10-14'));
 pin('the next month', '2027-01-01', A::nextMonth('2026-12-31'));
+pin('a month far ahead is pulled back to the last open month', '2027-04-01', A::clampMonth('2099-05-17', '2026-10-13', '2027-04-11'));
+pin('a past month is pulled up to this one', '2026-10-01', A::clampMonth('1999-05-17', '2026-10-13', '2027-04-11'));
+pin('a month inside the window stays', '2026-12-01', A::clampMonth('2026-12-30', '2026-10-13', '2027-04-11'));
+pin('junk is this month', '2026-10-01', A::clampMonth('junk', '2026-10-13', '2027-04-11'));
 pin('February in a leap year has 29 dates', 29, count(A::dates('2028-02-01', A::nextMonth('2028-02-01'))));
 
 exit(harness_result());

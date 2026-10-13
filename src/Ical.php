@@ -18,7 +18,7 @@ use mindstellar\database\UtcDatetime;
 
 /**
  * A listing's bookings as an iCalendar feed (RFC 5545), for Google, Apple or Outlook calendars.
- * Stays are all-day events; slots carry UTC times. Buyers' contact details are left out.
+ * Stays are all-day events; slots carry UTC times. Nothing about the buyer is in it.
  */
 final class Ical
 {
@@ -49,7 +49,7 @@ final class Ical
                 $lines[] = 'DTSTART:' . gmdate('Ymd\THis\Z', $start);
                 $lines[] = 'DTEND:' . gmdate('Ymd\THis\Z', $end);
             }
-            $lines[] = 'SUMMARY:' . self::text(($pending ? __('Request', 'booking') : __('Booked', 'booking')) . ': ' . (string) $b['s_name']);
+            $lines[] = 'SUMMARY:' . self::text(sprintf(__('Booking #%1$d (%2$s)', 'booking'), (int) $b['pk_i_id'], Status::label((string) $b['s_status'])));
             $lines[] = 'STATUS:' . ($pending ? 'TENTATIVE' : 'CONFIRMED');
             $lines[] = 'TRANSP:OPAQUE';
             $lines[] = 'END:VEVENT';

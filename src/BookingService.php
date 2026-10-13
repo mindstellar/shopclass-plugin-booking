@@ -25,15 +25,36 @@ final class BookingService
     private BookingStore $store;
     private Notifier $notifier;
 
+    /** Rate-limit context for requests from an account, on the site or the API. */
+    public const THROTTLE_USER = 'booking_request_user';
+
     /** fn(): int */
     private Closure $clock;
 
-    public function __construct(Config $config, BookingStore $store, Notifier $notifier, ?Closure $clock = null)
+    /** fn(string $context, string $key, int $max, int $window): bool, true while under the limit; counts one. */
+    private Closure $limiter;
+
+    public function __construct(Config $config, BookingStore $store, Notifier $notifier, ?Closure $clock = null, ?Closure $limiter = null)
     {
         $this->config   = $config;
         $this->store    = $store;
         $this->notifier = $notifier;
         $this->clock    = $clock ?? static fn (): int => time();
+        $this->limiter  = $limiter ?? static fn (string $context, string $key, int $max, int $window): bool => \mindstellar\security\RateLimit::hit($context, $key, $max, $window);
+    }
+
+    /**
+     * Count one request from a signed-in account, refusing it past the hourly limit.
+     *
+     * @throws BookingException 'limit'
+     */
+    public function throttleUser(int $userId): void
+    {
+        if ($userId > 0 && $this->config->userLimit > 0
+            && !($this->limiter)(self::THROTTLE_USER, 'u' . $userId, $this->config->userLimit, 3600)
+        ) {
+            throw new BookingException('limit');
+        }
     }
 
     public function store(): BookingStore
@@ -79,7 +100,7 @@ final class BookingService
         $tz             = $this->config->tz();
         $now            = ($this->clock)();
         [$first, $last] = Availability::window($now, $this->config->maxDays, $tz);
-        $from           = Availability::monthStart(Availability::validDate($date) ? $date : $first);
+        $from           = Availability::clampMonth($date, $first, $last);
         $to             = Availability::nextMonth($from);
         $blocked        = $this->store->blocked($itemId, $from, $to);
         $holds          = $this->store->holds($itemId, Availability::dayStart($from, $tz), Availability::dayStart($to, $tz));
@@ -113,12 +134,13 @@ final class BookingService
      * Check a request and turn it into a booking's values. Dates are local: a check-in and a
      * check-out date for nights, a "Y-m-d\TH:i" start for a slot.
      *
-     * @param array<string,mixed> $input item, start, end, name, email, phone, note
+     * @param array<string,mixed> $input        item, start, end, name, email, phone, note
+     * @param string              $accountEmail a signed-in buyer's own address, used in place of any typed one
      *
      * @return array{item:int,user:?int,mode:string,start:int,end:int,status:string,name:string,email:string,phone:string,note:string}
      * @throws BookingException
      */
-    public function prepare(array $input, int $userId = 0): array
+    public function prepare(array $input, int $userId = 0, string $accountEmail = ''): array
     {
         $ctx     = $this->bookable((int) ($input['item'] ?? 0));
         $listing = $ctx['listing'];
@@ -126,7 +148,7 @@ final class BookingService
         $now     = ($this->clock)();
 
         $name  = self::clean((string) ($input['name'] ?? ''), 100);
-        $email = strtolower(trim((string) ($input['email'] ?? '')));
+        $email = strtolower(trim($userId > 0 ? $accountEmail : (string) ($input['email'] ?? '')));
         $phone = self::clean((string) ($input['phone'] ?? ''), 40);
         $note  = self::clean((string) ($input['note'] ?? ''), 1000, true);
         if ($name === '' || strlen($email) > 150 || filter_var($email, FILTER_VALIDATE_EMAIL) === false
@@ -189,6 +211,12 @@ final class BookingService
      */
     public function book(array $request): array
     {
+        $userId = (int) ($request['user'] ?? 0);
+        if ($this->store->countOpen($userId, $request['email'], $request['item']) >= $this->config->openPerListing
+            || $this->store->countOpen($userId, $request['email']) >= $this->config->openTotal
+        ) {
+            throw new BookingException('open');
+        }
         $id      = $this->store->create($request);
         $booking = (array) $this->store->find($id);
         $this->notifier->booking($request['status'] === Status::CONFIRMED ? Notifier::CONFIRMED : Notifier::REQUESTED, $booking);
@@ -197,7 +225,8 @@ final class BookingService
     }
 
     /**
-     * A guest's request: nothing is stored yet, they get a link that makes the booking.
+     * A guest's request: it is kept aside under a random id, and the link in their e-mail
+     * carries only that id. Nothing reaches the seller until they open it.
      *
      * @param array<string,mixed> $request from prepare()
      *
@@ -205,8 +234,9 @@ final class BookingService
      */
     public function askGuest(array $request): string
     {
-        $ctx   = $this->bookable((int) $request['item']);
-        $token = Token::request(array(
+        $ctx = $this->bookable((int) $request['item']);
+        $id  = Token::newId();
+        $this->store->keepGuest($id, array(
             'item'  => $request['item'],
             'mode'  => $request['mode'],
             'start' => $request['start'],
@@ -215,7 +245,8 @@ final class BookingService
             'email' => $request['email'],
             'phone' => $request['phone'],
             'note'  => $request['note'],
-        ), ($this->clock)());
+        ), Token::REQUEST_TTL);
+        $token = Token::request($id, ($this->clock)());
         $this->notifier->verify($request, (string) $ctx['item']['s_title'], $token);
 
         return $token;
@@ -224,14 +255,16 @@ final class BookingService
     /**
      * A guest followed their link: check the request again, as time has passed, and book it.
      *
-     * @param callable $once fn(string $token): bool, true the first time a token is used
-     *
      * @return array<string,mixed> the booking
      * @throws BookingException
      */
-    public function confirmGuest(string $token, callable $once): array
+    public function confirmGuest(string $token): array
     {
-        $data = Token::openRequest($token, ($this->clock)());
+        $id   = Token::openRequest($token, ($this->clock)());
+        $data = $id === null ? null : $this->store->guest($id);
+        if ($id !== null && $data === null && $this->store->guestUsed($id)) {
+            throw new BookingException('used', __('This request was already confirmed.', 'booking'));
+        }
         if ($data === null) {
             throw new BookingException('expired', __('That link has expired. Please send the request again.', 'booking'));
         }
@@ -244,7 +277,7 @@ final class BookingService
             $input['start'] = Availability::localDateTime((int) $data['start'], $tz);
         }
         $request = $this->prepare($input);
-        if (!$once($token)) {
+        if (!$this->store->claimGuest((string) $id, 2 * Token::REQUEST_TTL)) {
             throw new BookingException('used', __('This request was already confirmed.', 'booking'));
         }
 
@@ -334,8 +367,8 @@ final class BookingService
             'hours'        => (string) json_encode((object) Availability::parseHours($hours)),
             'price_note'   => self::clean((string) ($input['price_note'] ?? ''), 200),
         ));
-        $today = Availability::localDate(($this->clock)(), $this->config->tz());
-        $this->store->setBlocked($itemId, Availability::parseBlocked((string) ($input['blocked'] ?? '')), $today);
+        [$today, $last] = Availability::window(($this->clock)(), $this->config->maxDays, $this->config->tz());
+        $this->store->setBlocked($itemId, Availability::parseBlocked((string) ($input['blocked'] ?? ''), $today, $last), $today);
     }
 
     /**

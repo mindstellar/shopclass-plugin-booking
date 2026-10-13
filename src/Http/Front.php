@@ -56,15 +56,14 @@ final class Front
         }
         $itemId  = (int) $ctx['item']['pk_i_id'];
         $version = (int) $ctx['listing']['i_version'];
-        $from    = (string) Params::getParamString('from');
-        $from    = Availability::validDate($from) ? Availability::monthStart($from) : '';
-        $today   = Availability::localDate(time(), $service->config()->tz());
-        $key     = 'booking:month:' . $itemId . ':' . $version . ':' . $today . ':' . $from;
+        [$today, $last] = Availability::window(time(), $service->config()->maxDays, $service->config()->tz());
+        $from           = Availability::clampMonth((string) Params::getParamString('from'), $today, $last);
+        $key            = 'booking:month:' . $itemId . ':' . $version . ':' . $today . ':' . $from;
 
         $found = false;
         $data  = osc_cache_get($key, $found);
         if (!$found || !is_array($data)) {
-            $data = $service->month($itemId, $ctx['mode'], $ctx['listing'], $from !== '' ? $from : $today);
+            $data = $service->month($itemId, $ctx['mode'], $ctx['listing'], $from);
             osc_cache_set($key, $data, self::CACHE_TTL);
         }
         $data['version'] = $version;
@@ -104,8 +103,10 @@ final class Front
                 if (ActionThrottle::exceededFor(self::THROTTLE, $service->config()->guestLimit)) {
                     throw new BookingException('limit');
                 }
+            } else {
+                $service->throttleUser($userId);
             }
-            $request = $service->prepare($input, $userId);
+            $request = $service->prepare($input, $userId, $userId > 0 ? (string) osc_logged_user_email() : '');
             if ($userId > 0) {
                 $booking = $service->book($request);
                 osc_add_flash_ok_message($booking['s_status'] === Status::CONFIRMED
@@ -129,12 +130,13 @@ final class Front
     public static function guest(): void
     {
         $service = Plugin::service();
-        $token   = (string) Params::getParam('t', false, false);
+        $token   = (string) Params::getParamString('t');
         if (!preg_match('/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/', $token)) {
             $token = '';
         }
-        $request = $token !== '' ? Token::openRequest($token) : null;
-        $cancel  = $token !== '' && $request === null ? Token::peekCancel($token) : null;
+        $guestId = $token !== '' ? Token::openRequest($token) : null;
+        $request = $guestId !== null ? $service->store()->guest($guestId) : null;
+        $cancel  = $token !== '' && $guestId === null ? Token::peekCancel($token) : null;
         $booking = $cancel !== null ? $service->store()->find($cancel) : null;
         if ($booking !== null && Token::openCancel($token, (string) $booking['s_email']) === null) {
             $booking = null;
@@ -144,7 +146,7 @@ final class Front
             osc_csrf_check();
             try {
                 if ($request !== null) {
-                    $made = $service->confirmGuest($token, static fn (string $t): bool => osc_kv_claim(Plugin::FOLDER, 'used:' . sha1($t), 2 * Token::REQUEST_TTL));
+                    $made = $service->confirmGuest($token);
                     osc_add_flash_ok_message($made['s_status'] === Status::CONFIRMED
                         ? __('Your booking is confirmed. We sent you an e-mail with the details.', 'booking')
                         : __('Your request was sent. The seller will accept or decline it, and we will e-mail you.', 'booking'));
@@ -185,6 +187,7 @@ final class Front
             http_response_code(404);
         }
         header('Cache-Control: private, no-store');
+        header('Referrer-Policy: no-referrer');
         osc_gui_view('', dirname(__DIR__, 2) . '/views/guest.php', array('heading' => $heading, 'title' => $heading));
     }
 

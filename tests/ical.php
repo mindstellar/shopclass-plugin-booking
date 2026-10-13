@@ -16,7 +16,7 @@ use mindstellar\booking\Ical;
 $tz  = new DateTimeZone('Europe/London');
 $ics = Ical::build('Cottage; sea view, garden', 'example.test', array(
     array('pk_i_id' => 1, 's_mode' => 'nights', 'dt_start' => '2026-10-19 23:00:00', 'dt_end' => '2026-10-22 23:00:00', 's_status' => 'confirmed', 's_name' => 'Ana', 'dt_updated' => ''),
-    array('pk_i_id' => 2, 's_mode' => 'slots', 'dt_start' => '2026-10-14 08:00:00', 'dt_end' => '2026-10-14 09:00:00', 's_status' => 'pending', 's_name' => 'Bo', 'dt_updated' => ''),
+    array('pk_i_id' => 2, 's_mode' => 'slots', 'dt_start' => '2026-10-14 08:00:00', 'dt_end' => '2026-10-14 09:00:00', 's_status' => 'pending', 's_name' => 'Zed', 'dt_updated' => ''),
 ), $tz, 1_800_000_000);
 $lines = explode("\r\n", $ics);
 
@@ -28,6 +28,8 @@ check('a slot is in UTC', in_array('DTSTART:20261014T080000Z', $lines, true));
 check('a request is tentative', in_array('STATUS:TENTATIVE', $lines, true));
 check('each event has a stable id', in_array('UID:booking-1@example.test', $lines, true));
 pin('two events', 2, substr_count($ics, 'BEGIN:VEVENT'));
+check('an event is named by its number and status', in_array('SUMMARY:Booking #1 (Confirmed)', $lines, true));
+check('the buyer is not named', strpos($ics, 'Ana') === false && strpos($ics, 'Zed') === false);
 
 harness_section('folding');
 

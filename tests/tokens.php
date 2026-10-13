@@ -13,17 +13,19 @@ require __DIR__ . '/lib/bootstrap.php';
 
 use mindstellar\booking\Token;
 
-$now     = 1_800_000_000;
-$request = array('item' => 7, 'mode' => 'nights', 'start' => $now + 86400, 'end' => $now + 3 * 86400, 'name' => 'Ana', 'email' => 'ana@example.test', 'phone' => '', 'note' => 'Late arrival');
+$now = 1_800_000_000;
+$id  = Token::newId();
 
 harness_section('a guest request');
 
-$token = Token::request($request, $now);
-pin('it opens to the same request', $request, Token::openRequest($token, $now + 60));
+check('the id is random hex', preg_match('/^[a-f0-9]{32}$/', $id) === 1 && $id !== Token::newId());
+$token = Token::request($id, $now);
+pin('it opens to the id', $id, Token::openRequest($token, $now + 60));
 pin('it lasts a day', null, Token::openRequest($token, $now + Token::REQUEST_TTL + 1));
+pin('it carries the id and its expiry, nothing else', array('g', 'x'), array_keys((array) json_decode((string) base64_decode(strtr(explode('.', $token)[0], '-_', '+/')), true)));
 [$payload, $sig] = explode('.', $token);
-$forged          = rtrim(strtr(base64_encode((string) json_encode(array('item' => 8) + $request + array('x' => $now + 999))), '+/', '-_'), '=') . '.' . $sig;
-pin('a changed request is refused', null, Token::openRequest($forged, $now));
+$forged          = rtrim(strtr(base64_encode((string) json_encode(array('g' => Token::newId(), 'x' => $now + 999))), '+/', '-_'), '=') . '.' . $sig;
+pin('a changed id is refused', null, Token::openRequest($forged, $now));
 pin('a broken one is refused', null, Token::openRequest('nonsense', $now));
 pin('it is not a cancel link', null, Token::peekCancel($token, $now));
 

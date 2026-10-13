@@ -143,6 +143,38 @@ return array(
             ),
         ),
         array(
+            'title'  => __('Limits per buyer', $d),
+            'fields' => array(
+                array(
+                    'type'     => 'number',
+                    'name'     => 'user_limit',
+                    'label'    => __('Requests per hour from one account', $d),
+                    'help'     => __('Counts requests from the site and the API. 0 means no limit.', $d),
+                    'default'  => 10,
+                    'attrs'    => array('min' => 0, 'max' => 1000),
+                    'validate' => static fn ($v) => ((int) $v < 0 || (int) $v > 1000) ? __('Use 0 to 1000.', 'booking') : null,
+                ),
+                array(
+                    'type'     => 'number',
+                    'name'     => 'open_per_listing',
+                    'label'    => __('Waiting requests one buyer may have on one listing', $d),
+                    'default'  => 3,
+                    'required' => true,
+                    'attrs'    => array('min' => 1, 'max' => 100),
+                    'validate' => static fn ($v) => ((int) $v < 1 || (int) $v > 100) ? __('Use 1 to 100.', 'booking') : null,
+                ),
+                array(
+                    'type'     => 'number',
+                    'name'     => 'open_total',
+                    'label'    => __('Waiting requests one buyer may have in all', $d),
+                    'default'  => 10,
+                    'required' => true,
+                    'attrs'    => array('min' => 1, 'max' => 1000),
+                    'validate' => static fn ($v) => ((int) $v < 1 || (int) $v > 1000) ? __('Use 1 to 1000.', 'booking') : null,
+                ),
+            ),
+        ),
+        array(
             'title'  => __('Guests', $d),
             'fields' => array(
                 array(

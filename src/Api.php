@@ -63,7 +63,6 @@ final class Api
                     'start' => array('type' => 'string', 'maxLength' => 16),
                     'end'   => array('type' => 'string', 'maxLength' => 10),
                     'name'  => array('type' => 'string', 'maxLength' => 100),
-                    'email' => array('type' => 'string', 'maxLength' => 150),
                     'phone' => array('type' => 'string', 'maxLength' => 40),
                     'note'  => array('type' => 'string', 'maxLength' => 1000),
                 ),
@@ -128,19 +127,22 @@ final class Api
         $user    = class_exists('User') ? \User::getInstance()->findByPrimaryKey($userId) : array();
         $user    = is_array($user) ? $user : array();
         try {
+            $service->throttleUser($userId);
             $request = $service->prepare(array(
                 'item'  => (int) $call->intArg('id'),
                 'start' => (string) ($input['start'] ?? ''),
                 'end'   => (string) ($input['end'] ?? ''),
                 'name'  => (string) ($input['name'] ?? ($user['s_name'] ?? '')),
-                'email' => (string) ($input['email'] ?? ($user['s_email'] ?? '')),
                 'phone' => (string) ($input['phone'] ?? ''),
                 'note'  => (string) ($input['note'] ?? ''),
-            ), $userId);
+            ), $userId, (string) ($user['s_email'] ?? ''));
             $booking = $service->book($request);
         } catch (BookingException $e) {
             if ($e->reason() === 'off') {
                 throw ProblemException::notFound($e->getMessage());
+            }
+            if ($e->reason() === 'limit') {
+                throw ProblemException::tooMany($e->getMessage(), 3600);
             }
             $code = in_array($e->reason(), array('input', 'dates', 'slot', 'min_nights', 'max_nights'), true) ? 'ext_booking_invalid' : 'ext_booking_unavailable';
             throw ProblemException::of($code, $e->getMessage());

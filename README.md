@@ -29,9 +29,13 @@ Listings in other categories show nothing, and pages without a calendar load not
 
 - A signed-in buyer's request is stored at once as *waiting for reply*, or *confirmed* when
   the seller chose auto-confirm.
-- A guest gets an e-mail with a link. The request is made only when they open it and press
-  the button, so the seller never sees unconfirmed addresses. Guests are limited per address
-  per hour, and can be switched off.
+- A guest gets an e-mail with a link. The request is kept on the server and the link carries
+  only a random id; the booking is made when they open it and press the button, so the seller
+  never sees unconfirmed addresses. Guests are limited per address per hour, and can be
+  switched off.
+- A signed-in buyer always books with their account's e-mail address. Accounts are limited
+  per hour (site and API together), and in how many requests they may have waiting, per
+  listing and in all.
 - The seller accepts or declines from their account. Either side can cancel; the buyer's
   e-mails carry a cancel link.
 - Requests nobody answers expire after the hours set in the settings, checked hourly by cron.
@@ -45,7 +49,15 @@ wall, so a day with a clock change has one slot more or less.
 ## Calendar feed
 
 Each listing's settings show a private `.ics` address. Add it to Google, Apple or Outlook
-calendar to see the bookings there. Ticking *Make a new address* stops the old one.
+calendar to see the bookings there. Events are named by booking number and status; no
+buyer details are in the feed. Ticking *Make a new address* stops the old one.
+
+## Personal data
+
+A member's data export lists the booking requests they sent, from their account or as a
+guest with its address. When the account is deleted, those bookings lose the buyer's name,
+address, phone and message, and any still holding dates are cancelled. A deleted listing
+takes its bookings with it.
 
 ## Admin
 
@@ -67,8 +79,8 @@ With the API on, two endpoints are added:
   calendar. Any key.
 - `POST /api/v1/ext/booking/listings/{id}/requests`: a booking request for the signed-in
   user, with `start` (a date for nights, `YYYY-MM-DDTHH:MM` local time for a slot), `end`
-  (check-out date, nights only), and optional `name`, `email`, `phone`, `note`. Needs the
-  `ext:booking:write` scope.
+  (check-out date, nights only), and optional `name`, `phone`, `note`. The account's own
+  e-mail address is used. Needs the `ext:booking:write` scope.
 
 ## Translations
 
