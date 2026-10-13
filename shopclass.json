@@ -1,0 +1,14 @@
+{
+  "$schema": "../schema/package.schema.json",
+  "slug": "booking",
+  "type": "plugin",
+  "categories": ["content-widgets"],
+  "tags": ["booking", "calendar", "rentals", "appointments", "availability", "ical"],
+  "short_description": "Let buyers book a listing for dates or a time slot, with an availability calendar, seller approval, e-mails and a calendar feed.",
+  "icon": "assets/icon.svg",
+  "license": "GPL-3.0-or-later",
+  "support": {
+    "issues": "https://github.com/mindstellar/shopclass-plugin-booking/issues",
+    "docs": "https://github.com/mindstellar/shopclass-plugin-booking#readme"
+  }
+}

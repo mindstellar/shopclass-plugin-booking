@@ -1,0 +1,51 @@
+/*
+ * Booking Calendar plugin for Shopclass. Copyright (c) 2026 Navjot Tomer (Mindstellar) and contributors.
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ *
+ * Plain defaults: every class starts with booking-, and colours come from custom properties a theme can set.
+ */
+.booking {
+    --booking-free: #e7f4ea;
+    --booking-booked: #f3e3e3;
+    --booking-muted: #f1f1f1;
+    --booking-pick: #1f6f43;
+    --booking-pick-text: #fff;
+    --booking-line: rgba(0, 0, 0, .15);
+    margin: 1.5rem 0;
+}
+
+.booking-title { margin: 0 0 .5rem; }
+.booking-note, .booking-hint, .booking-owner { margin: .25rem 0 .75rem; }
+.booking-calendar[hidden], .booking-slots[hidden] { display: none; }
+.booking-calendar { max-width: 24rem; margin-bottom: 1rem; }
+.booking-nav { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
+.booking-month { margin: 0; font-size: 1rem; text-align: center; flex: 1; }
+.booking-prev, .booking-next { min-width: 2.5rem; min-height: 2.5rem; border: 1px solid var(--booking-line); background: transparent; border-radius: .375rem; cursor: pointer; font-size: 1.25rem; line-height: 1; }
+.booking-prev:disabled, .booking-next:disabled { opacity: .35; cursor: default; }
+
+.booking-grid { display: grid; gap: 2px; margin-top: .5rem; }
+.booking-row { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.booking-weekday { font-size: .75rem; text-align: center; padding: .25rem 0; opacity: .7; }
+.booking-day { width: 100%; aspect-ratio: 1; min-height: 2.25rem; border: 1px solid transparent; border-radius: .375rem; background: var(--booking-muted); cursor: pointer; font: inherit; color: inherit; }
+.booking-day--free { background: var(--booking-free); }
+.booking-day--booked, .booking-day--full { background: var(--booking-booked); text-decoration: line-through; }
+.booking-day--past, .booking-day--beyond, .booking-day--blocked, .booking-day--closed { opacity: .5; }
+.booking-day[aria-disabled="true"] { cursor: default; }
+.booking-day--range { background: color-mix(in srgb, var(--booking-pick) 25%, transparent); }
+.booking-day[aria-pressed="true"] { background: var(--booking-pick); color: var(--booking-pick-text); text-decoration: none; opacity: 1; }
+.booking-day[aria-current="date"] { border-color: currentColor; }
+.booking-day:focus-visible, .booking-slot:focus-visible { outline: 2px solid var(--booking-pick); outline-offset: 2px; }
+
+.booking-slots { margin-top: .75rem; }
+.booking-slots-title { margin: 0 0 .5rem; font-size: .95rem; }
+.booking-slot-list { display: flex; flex-wrap: wrap; gap: .375rem; }
+.booking-slot { min-width: 4.5rem; min-height: 2.25rem; border: 1px solid var(--booking-line); border-radius: .375rem; background: var(--booking-free); cursor: pointer; font: inherit; }
+.booking-slot:disabled { background: var(--booking-muted); text-decoration: line-through; opacity: .6; cursor: default; }
+.booking-slot[aria-pressed="true"] { background: var(--booking-pick); color: var(--booking-pick-text); }
+.booking-status { min-height: 1.5em; margin: .5rem 0 0; }
+
+.booking-when, .booking-contact { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: .75rem; margin-bottom: .75rem; }
+.booking-field { display: flex; flex-direction: column; gap: .25rem; }
+.booking-field-note { grid-column: 1 / -1; }
+.booking-field input, .booking-field textarea { width: 100%; box-sizing: border-box; font: inherit; padding: .5rem; }
+.booking-submit { font: inherit; padding: .6rem 1.2rem; cursor: pointer; }

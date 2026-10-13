@@ -1,0 +1,768 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Booking Calendar 0.1.0\n"
+"Report-Msgid-Bugs-To: https://github.com/mindstellar/shopclass-plugin-booking/issues\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Language: \n"
+
+#: views/calendar.php:51
+msgid "%1$s at %2$s"
+msgstr ""
+
+#: src/Notifier.php:142
+msgid "%1$s to %2$s (%3$d nights)"
+msgstr ""
+
+#: views/calendar.php:46
+msgid "%1$s to %2$s, %3$d nights"
+msgstr ""
+
+#: src/Notifier.php:151
+msgid "%1$s, %2$s to %3$s"
+msgstr ""
+
+#: settings.php:159
+msgid "0 means no limit."
+msgstr ""
+
+#: src/Notifier.php:202
+msgid "A booking request expired before it was answered."
+msgstr ""
+
+#: views/account.php:180
+msgid "Accept"
+msgstr ""
+
+#: src/Notifier.php:91
+msgid "Accept or decline the request"
+msgstr ""
+
+#: views/account.php:136
+msgid "Add this address to Google, Apple or Outlook calendar"
+msgstr ""
+
+#: views/account.php:153
+msgid "All"
+msgstr ""
+
+#: admin/bookings.php:40
+msgid "All (%d)"
+msgstr ""
+
+#: views/account.php:76
+msgid "All bookings"
+msgstr ""
+
+#: src/Http/Front.php:117
+msgid "Almost done: we sent you an e-mail. Open the link in it to send your request."
+msgstr ""
+
+#: admin/bookings.php:48
+msgid "Asked"
+msgstr ""
+
+#: views/calendar.php:63
+msgid "Book a time"
+msgstr ""
+
+#: src/Ical.php:52
+msgid "Booked"
+msgstr ""
+
+#: settings.php:48
+msgid "Booking"
+msgstr ""
+
+#: settings.php:69
+#: src/Admin.php:26
+msgid "Booking Calendar"
+msgstr ""
+
+#: index.php:54
+msgid "Booking Calendar needs Shopclass 7.0 and is switched off. Update Shopclass to use it."
+msgstr ""
+
+#: settings.php:79
+msgid "Booking by category"
+msgstr ""
+
+#: src/Notifier.php:177
+#: src/Notifier.php:197
+msgid "Booking cancelled: %s"
+msgstr ""
+
+#: src/Notifier.php:173
+#: src/Notifier.php:192
+msgid "Booking confirmed: %s"
+msgstr ""
+
+#: src/Notifier.php:175
+#: src/Notifier.php:194
+msgid "Booking declined: %s"
+msgstr ""
+
+#: src/Notifier.php:180
+#: src/Notifier.php:202
+msgid "Booking request expired: %s"
+msgstr ""
+
+#: src/Notifier.php:171
+msgid "Booking request sent: %s"
+msgstr ""
+
+#: views/account.php:202
+msgid "Booking settings"
+msgstr ""
+
+#: src/Http/Front.php:231
+msgid "Booking settings saved."
+msgstr ""
+
+#: src/Http/Front.php:238
+msgid "Booking updated. We e-mailed the buyer."
+msgstr ""
+
+#: admin/bookings.php:36
+#: src/Admin.php:27
+#: src/Admin.php:36
+#: src/Plugin.php:138
+#: src/Plugin.php:231
+#: views/account.php:83
+msgid "Bookings"
+msgstr ""
+
+#: views/calendar.php:26
+msgid "Bookings are off for this listing."
+msgstr ""
+
+#: admin/bookings.php:53
+msgid "Bookings show here once buyers send requests."
+msgstr ""
+
+#: admin/bookings.php:48
+msgid "Buyer"
+msgstr ""
+
+#: views/account.php:134
+msgid "Calendar feed"
+msgstr ""
+
+#: views/account.php:216
+msgid "Cancel"
+msgstr ""
+
+#: views/account.php:184
+msgid "Cancel booking"
+msgstr ""
+
+#: src/Notifier.php:73
+#: views/guest.php:44
+msgid "Cancel this booking"
+msgstr ""
+
+#: src/Http/Front.php:183
+msgid "Cancel your booking"
+msgstr ""
+
+#: src/Status.php:107
+msgid "Cancelled"
+msgstr ""
+
+#: settings.php:74
+msgid "Categories"
+msgstr ""
+
+#: settings.php:47
+msgid "Category"
+msgstr ""
+
+#: views/calendar.php:63
+msgid "Check availability"
+msgstr ""
+
+#: views/calendar.php:87
+msgid "Check-in"
+msgstr ""
+
+#: views/calendar.php:90
+msgid "Check-out"
+msgstr ""
+
+#: settings.php:137
+msgid "Checked every hour by cron. A request also expires once its start has passed."
+msgstr ""
+
+#: views/account.php:125
+msgid "Closed dates"
+msgstr ""
+
+#: src/Notifier.php:116
+msgid "Confirm my request"
+msgstr ""
+
+#: views/account.php:87
+msgid "Confirm requests at once, without asking me"
+msgstr ""
+
+#: src/Http/Front.php:182
+msgid "Confirm your booking request"
+msgstr ""
+
+#: src/Notifier.php:121
+msgid "Confirm your booking request: %s"
+msgstr ""
+
+#: src/Status.php:103
+#: views/account.php:153
+msgid "Confirmed"
+msgstr ""
+
+#: views/calendar.php:94
+msgid "Date and time"
+msgstr ""
+
+#: views/account.php:127
+msgid "Dates nobody can book"
+msgstr ""
+
+#: views/account.php:182
+msgid "Decline"
+msgstr ""
+
+#: src/Status.php:105
+msgid "Declined"
+msgstr ""
+
+#: settings.php:118
+msgid "Default minimum nights"
+msgstr ""
+
+#: settings.php:108
+msgid "Default slot length (minutes)"
+msgstr ""
+
+#: settings.php:103
+msgid "Defaults and limits"
+msgstr ""
+
+#: views/calendar.php:104
+msgid "E-mail"
+msgstr ""
+
+#: src/Notifier.php:220
+msgid "E-mail: %s"
+msgstr ""
+
+#: src/Admin.php:37
+msgid "Every booking on the site. Sellers accept or decline requests from their account; requests nobody answers expire on their own."
+msgstr ""
+
+#: src/Plugin.php:195
+msgid "Expire unanswered booking requests"
+msgstr ""
+
+#: src/Status.php:109
+msgid "Expired"
+msgstr ""
+
+#: views/account.php:166
+msgid "Filter requests"
+msgstr ""
+
+#: views/account.php:112
+msgid "For each day, the hours you take bookings, such as 09:00-12:00, 13:00-17:00. Leave a day empty to close it."
+msgstr ""
+
+#: views/account.php:74
+msgid "Friday"
+msgstr ""
+
+#: views/guest.php:29
+msgid "Go to the home page"
+msgstr ""
+
+#: settings.php:158
+msgid "Guest requests per hour from one address"
+msgstr ""
+
+#: settings.php:146
+msgid "Guests"
+msgstr ""
+
+#: settings.php:127
+msgid "How far ahead buyers can book (days)"
+msgstr ""
+
+#: admin/bookings.php:48
+msgid "ID"
+msgstr ""
+
+#: views/account.php:138
+msgid "Keep it private: anyone with it sees your bookings."
+msgstr ""
+
+#: views/account.php:108
+msgid "Length of one booking, in minutes"
+msgstr ""
+
+#: settings.php:71
+msgid "Let buyers book listings for dates or time slots. Choose which categories take bookings; sellers turn it on for each listing from their account."
+msgstr ""
+
+#: settings.php:151
+msgid "Let visitors without an account send requests"
+msgstr ""
+
+#: admin/bookings.php:48
+msgid "Listing"
+msgstr ""
+
+#: views/account.php:141
+msgid "Make a new address and stop the old one"
+msgstr ""
+
+#: views/calendar.php:122
+msgid "Manage bookings for this listing"
+msgstr ""
+
+#: views/calendar.php:110
+msgid "Message to the seller (optional)"
+msgstr ""
+
+#: views/account.php:99
+msgid "Minimum nights"
+msgstr ""
+
+#: views/calendar.php:68
+msgid "Minimum stay: %d nights."
+msgstr ""
+
+#: views/account.php:74
+msgid "Monday"
+msgstr ""
+
+#: src/Notifier.php:219
+msgid "Name: %s"
+msgstr ""
+
+#: src/Notifier.php:190
+msgid "New booking request: %s"
+msgstr ""
+
+#: views/calendar.php:36
+msgid "Next month"
+msgstr ""
+
+#: settings.php:28
+msgid "Nights (date range)"
+msgstr ""
+
+#: settings.php:80
+msgid "Nights suit rentals: buyers pick check-in and check-out dates. Time slots suit services: buyers pick a time within the seller's opening hours. A subcategory follows its parent unless you change it."
+msgstr ""
+
+#: admin/bookings.php:53
+msgid "No bookings"
+msgstr ""
+
+#: views/calendar.php:50
+msgid "No free times on this day."
+msgstr ""
+
+#: views/account.php:173
+msgid "No requests here."
+msgstr ""
+
+#: views/account.php:194
+msgid "None of your listings is in a category that takes bookings."
+msgstr ""
+
+#: views/calendar.php:45
+msgid "Now pick your check-out date."
+msgstr ""
+
+#: settings.php:27
+#: settings.php:55
+#: views/account.php:201
+msgid "Off"
+msgstr ""
+
+#: views/account.php:129
+msgid "One per line: a date like 2026-12-24, or a range like 2026-12-24..2026-12-31."
+msgstr ""
+
+#: views/account.php:106
+msgid "Opening hours"
+msgstr ""
+
+#: admin/bookings.php:72
+msgid "Pages"
+msgstr ""
+
+#: views/calendar.php:107
+msgid "Phone (optional)"
+msgstr ""
+
+#: src/Notifier.php:223
+msgid "Phone: %s"
+msgstr ""
+
+#: src/BookingException.php:53
+msgid "Pick a check-in date and a later check-out date."
+msgstr ""
+
+#: views/calendar.php:48
+msgid "Pick a day to see its times."
+msgstr ""
+
+#: src/BookingException.php:61
+msgid "Pick one of the times shown on the calendar."
+msgstr ""
+
+#: views/calendar.php:44
+msgid "Pick your check-in date."
+msgstr ""
+
+#: src/BookingException.php:76
+msgid "Please check the details and try again."
+msgstr ""
+
+#: src/Notifier.php:110
+msgid "Please confirm your booking request. The seller only sees it once you do."
+msgstr ""
+
+#: src/BookingService.php:135
+msgid "Please give your name and a valid e-mail address."
+msgstr ""
+
+#: src/BookingException.php:73
+msgid "Please sign in to send a booking request."
+msgstr ""
+
+#: views/calendar.php:35
+msgid "Previous month"
+msgstr ""
+
+#: views/account.php:89
+msgid "Price note"
+msgstr ""
+
+#: src/Ical.php:52
+msgid "Request"
+msgstr ""
+
+#: views/account.php:165
+msgid "Requests for your listings"
+msgstr ""
+
+#: settings.php:26
+msgid "Same as parent"
+msgstr ""
+
+#: views/account.php:74
+msgid "Saturday"
+msgstr ""
+
+#: views/account.php:144
+msgid "Save"
+msgstr ""
+
+#: src/Notifier.php:92
+msgid "See your bookings"
+msgstr ""
+
+#: settings.php:109
+msgid "Sellers can change it for each listing."
+msgstr ""
+
+#: src/Plugin.php:192
+msgid "Send a booking e-mail"
+msgstr ""
+
+#: views/calendar.php:116
+msgid "Send booking request"
+msgstr ""
+
+#: views/guest.php:40
+msgid "Send my booking request"
+msgstr ""
+
+#: src/Admin.php:39
+msgid "Settings"
+msgstr ""
+
+#: views/account.php:92
+msgid "Shown above the calendar, such as \"80 a night, cleaning 30\"."
+msgstr ""
+
+#: views/calendar.php:118
+msgid "Sign in to send a booking request."
+msgstr ""
+
+#: src/Notifier.php:175
+msgid "Sorry, the seller declined your booking request."
+msgstr ""
+
+#: admin/bookings.php:48
+msgid "Status"
+msgstr ""
+
+#: views/guest.php:42
+msgid "Status: %s"
+msgstr ""
+
+#: views/account.php:97
+msgid "Stays"
+msgstr ""
+
+#: views/account.php:74
+msgid "Sunday"
+msgstr ""
+
+#: views/account.php:85
+msgid "Take bookings for this listing"
+msgstr ""
+
+#: views/account.php:201
+msgid "Taking bookings"
+msgstr ""
+
+#: src/BookingException.php:69
+msgid "That booking cannot be changed that way any more."
+msgstr ""
+
+#: src/BookingException.php:67
+msgid "That booking was not found."
+msgstr ""
+
+#: src/BookingException.php:51
+msgid "That is too far ahead to book yet."
+msgstr ""
+
+#: src/BookingService.php:236
+msgid "That link has expired. Please send the request again."
+msgstr ""
+
+#: src/BookingException.php:55
+msgid "That stay is shorter than the minimum."
+msgstr ""
+
+#: src/BookingException.php:57
+msgid "That stay is too long for one request."
+msgstr ""
+
+#: src/BookingException.php:49
+msgid "That time has already passed."
+msgstr ""
+
+#: src/Http/Front.php:154
+#: src/Http/Front.php:242
+msgid "The booking is cancelled. We let the seller know."
+msgstr ""
+
+#: src/Notifier.php:198
+msgid "The buyer cancelled this booking."
+msgstr ""
+
+#: views/calendar.php:52
+msgid "The calendar could not be loaded. You can still type your dates below."
+msgstr ""
+
+#: src/Notifier.php:117
+msgid "The link works for 24 hours. If you did not ask for this, ignore this e-mail."
+msgstr ""
+
+#: views/calendar.php:47
+msgid "The minimum stay is %d nights."
+msgstr ""
+
+#: src/Notifier.php:180
+msgid "The seller did not answer your booking request in time, so it expired."
+msgstr ""
+
+#: src/BookingException.php:59
+msgid "The seller has closed some of those dates."
+msgstr ""
+
+#: settings.php:43
+msgid "There are no categories yet."
+msgstr ""
+
+#: settings.php:152
+msgid "They confirm their e-mail address with a link before the seller sees the request."
+msgstr ""
+
+#: src/Notifier.php:192
+msgid "This booking is confirmed."
+msgstr ""
+
+#: src/Notifier.php:194
+msgid "This booking request was declined."
+msgstr ""
+
+#: src/Notifier.php:177
+#: src/Notifier.php:198
+msgid "This booking was cancelled."
+msgstr ""
+
+#: src/Http/Front.php:183
+msgid "This link does not work"
+msgstr ""
+
+#: views/guest.php:28
+msgid "This link has expired or was changed. Links to confirm a request work for 24 hours."
+msgstr ""
+
+#: src/BookingException.php:63
+msgid "This listing does not take bookings."
+msgstr ""
+
+#: src/BookingService.php:248
+msgid "This request was already confirmed."
+msgstr ""
+
+#: src/BookingException.php:47
+msgid "Those dates were just booked by someone else. Please pick others."
+msgstr ""
+
+#: views/account.php:74
+msgid "Thursday"
+msgstr ""
+
+#: settings.php:29
+msgid "Time slots"
+msgstr ""
+
+#: views/calendar.php:49
+msgid "Times on %s"
+msgstr ""
+
+#: src/BookingException.php:71
+msgid "Too many requests from your address. Please try again later."
+msgstr ""
+
+#: views/account.php:74
+msgid "Tuesday"
+msgstr ""
+
+#: views/calendar.php:27
+msgid "Turn on bookings"
+msgstr ""
+
+#: settings.php:136
+msgid "Unanswered requests expire after (hours)"
+msgstr ""
+
+#: settings.php:163
+msgid "Use 0 to 1000."
+msgstr ""
+
+#: settings.php:122
+msgid "Use 1 to %d nights."
+msgstr ""
+
+#: settings.php:141
+msgid "Use 1 to 720 hours."
+msgstr ""
+
+#: settings.php:131
+msgid "Use 1 to 730 days."
+msgstr ""
+
+#: settings.php:113
+msgid "Use 5 to 720 minutes."
+msgstr ""
+
+#: views/account.php:153
+msgid "Waiting"
+msgstr ""
+
+#: src/Status.php:101
+msgid "Waiting for reply"
+msgstr ""
+
+#: views/calendar.php:114
+msgid "We will e-mail you a link to confirm your request."
+msgstr ""
+
+#: views/account.php:74
+msgid "Wednesday"
+msgstr ""
+
+#: admin/bookings.php:48
+msgid "When"
+msgstr ""
+
+#: src/BookingException.php:65
+msgid "You can only manage bookings for your own listings."
+msgstr ""
+
+#: src/BookingService.php:138
+msgid "You cannot book your own listing."
+msgstr ""
+
+#: src/Notifier.php:190
+msgid "You have a new booking request."
+msgstr ""
+
+#: views/account.php:212
+msgid "You have not booked anything yet."
+msgstr ""
+
+#: src/Notifier.php:173
+msgid "Your booking is confirmed."
+msgstr ""
+
+#: src/Http/Front.php:112
+#: src/Http/Front.php:149
+msgid "Your booking is confirmed. We sent you an e-mail with the details."
+msgstr ""
+
+#: src/Notifier.php:171
+msgid "Your booking request was sent. The seller will accept or decline it."
+msgstr ""
+
+#: views/account.php:210
+msgid "Your bookings"
+msgstr ""
+
+#: views/account.php:192
+msgid "Your listings"
+msgstr ""
+
+#: views/calendar.php:101
+msgid "Your name"
+msgstr ""
+
+#: src/Http/Front.php:113
+#: src/Http/Front.php:150
+msgid "Your request was sent. The seller will accept or decline it, and we will e-mail you."
+msgstr ""
+
+#: views/calendar.php:37
+msgid "available"
+msgstr ""
+
+#: views/calendar.php:38
+msgid "booked"
+msgstr ""
+
+#: views/calendar.php:39
+#: views/calendar.php:40
+msgid "closed"
+msgstr ""
+
+#: views/calendar.php:41
+msgid "fully booked"
+msgstr ""
+
+#: views/calendar.php:43
+msgid "not open yet"
+msgstr ""
+
+#: views/calendar.php:42
+msgid "past"
+msgstr ""

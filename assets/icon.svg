@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Booking calendar">
+  <rect width="128" height="128" rx="24" fill="#1f6f43"/>
+  <rect x="24" y="30" width="80" height="74" rx="10" fill="#fff"/>
+  <rect x="24" y="30" width="80" height="18" rx="9" fill="#cfe8d8"/>
+  <rect x="40" y="22" width="8" height="18" rx="4" fill="#fff"/>
+  <rect x="80" y="22" width="8" height="18" rx="4" fill="#fff"/>
+  <path d="M46 76l12 12 24-26" fill="none" stroke="#1f6f43" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

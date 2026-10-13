@@ -1,0 +1,8 @@
+.git
+.github
+.gitignore
+.distignore
+tests
+tools
+*.zip
+assets/screenshot-*
