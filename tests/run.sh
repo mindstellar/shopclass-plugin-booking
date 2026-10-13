@@ -6,7 +6,9 @@ cd "$(dirname "$0")/.."
 fail=0
 for t in tests/*.php; do
     echo "── $t"
-    php "$t" | tail -3
-    [ "${PIPESTATUS[0]}" -eq 0 ] || fail=1
+    out="$(php "$t" 2>&1)"
+    code=$?
+    printf '%s\n' "$out" | grep -E '^(FAIL|  FAILED|RESULT)|Fatal error|Parse error' || printf '%s\n' "$out" | tail -5
+    [ "$code" -eq 0 ] || fail=1
 done
 exit "$fail"

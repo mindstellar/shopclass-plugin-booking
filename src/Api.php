@@ -139,17 +139,32 @@ final class Api
                 'note'  => (string) ($input['note'] ?? ''),
             ), $userId, $service->store()->accountEmail($userId))['booking'];
         } catch (BookingException $e) {
-            if ($e->reason() === 'off') {
-                throw ProblemException::notFound($e->getMessage());
-            }
-            if ($e->reason() === 'limit') {
-                throw ProblemException::tooMany($e->getMessage(), 3600);
-            }
-            $code = in_array($e->reason(), array('input', 'dates', 'slot', 'min_nights', 'max_nights'), true) ? 'ext_booking_invalid' : 'ext_booking_unavailable';
-            throw ProblemException::of($code, $e->getMessage());
+            throw self::problemFor($e);
         }
 
         return Response::created(self::shape($booking), osc_api_url('ext/booking/listings/' . (int) $booking['fk_i_item_id'] . '/availability'));
+    }
+
+    /**
+     * The API's answer to a refused request: 404 when the listing takes no bookings, 429 past
+     * the hourly limit, 422 for bad input, 409 for anything else.
+     */
+    public static function problemFor(BookingException $e): ProblemException
+    {
+        switch ($e->reason()) {
+            case 'off':
+                return ProblemException::notFound($e->getMessage());
+            case 'limit':
+                return ProblemException::tooMany($e->getMessage(), 3600);
+            case 'input':
+            case 'dates':
+            case 'slot':
+            case 'min_nights':
+            case 'max_nights':
+                return ProblemException::of('ext_booking_invalid', $e->getMessage());
+        }
+
+        return ProblemException::of('ext_booking_unavailable', $e->getMessage());
     }
 
     /**

@@ -44,4 +44,30 @@ check('confirmed keeps its dates', S::holds(S::CONFIRMED));
 check('an unknown status moves nowhere', !S::can('paid', S::CONFIRMED, S::ADMIN));
 pin('every status has a badge core styles', array('pending', 'paid', 'failed', 'cancelled', 'cancelled'), array_map(array(S::class, 'badge'), S::all()));
 
+harness_section('the whole table');
+
+$allowed = array();
+foreach (S::all() as $from) {
+    foreach (S::all() as $to) {
+        foreach (array(S::BUYER, S::SELLER, S::ADMIN, S::SYSTEM) as $actor) {
+            if (S::can($from, $to, $actor)) {
+                $allowed[] = $from . '>' . $to . ':' . $actor;
+            }
+        }
+    }
+}
+pin('exactly these moves are allowed', array(
+    'pending>confirmed:seller',
+    'pending>confirmed:admin',
+    'pending>declined:seller',
+    'pending>declined:admin',
+    'pending>cancelled:buyer',
+    'pending>cancelled:seller',
+    'pending>cancelled:admin',
+    'pending>expired:system',
+    'confirmed>cancelled:buyer',
+    'confirmed>cancelled:seller',
+    'confirmed>cancelled:admin',
+), $allowed);
+
 exit(harness_result());
