@@ -514,16 +514,6 @@ final class BookingStore
     }
 
     /**
-     * Drop the plugin's tables.
-     */
-    public static function drop(): void
-    {
-        foreach (self::TABLES as $table) {
-            Db::execute('DROP TABLE IF EXISTS ' . self::t($table));
-        }
-    }
-
-    /**
      * @param array<int,mixed> $params
      *
      * @return array<int,array<string,mixed>>

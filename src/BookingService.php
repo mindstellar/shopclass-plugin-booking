@@ -28,19 +28,158 @@ final class BookingService
     /** Rate-limit context for requests from an account, on the site or the API. */
     public const THROTTLE_USER = 'booking_request_user';
 
+    /** Rate-limit context for guest requests, counted per address by core. */
+    public const THROTTLE_GUEST = 'booking_request';
+
+    /** What requestOrBook() did with a guest's request: mailed them a link to confirm it. */
+    public const ASKED = 'asked';
+
     /** fn(): int */
     private Closure $clock;
 
     /** fn(string $context, string $key, int $max, int $window): bool, true while under the limit; counts one. */
     private Closure $limiter;
 
-    public function __construct(Config $config, BookingStore $store, Notifier $notifier, ?Closure $clock = null, ?Closure $limiter = null)
+    /** fn(int $max): bool, true while this visitor's address is under the guest limit; counts one. */
+    private Closure $guestGate;
+
+    public function __construct(Config $config, BookingStore $store, Notifier $notifier, ?Closure $clock = null, ?Closure $limiter = null, ?Closure $guestGate = null)
     {
         $this->config   = $config;
         $this->store    = $store;
         $this->notifier = $notifier;
         $this->clock    = $clock ?? static fn (): int => time();
         $this->limiter  = $limiter ?? static fn (string $context, string $key, int $max, int $window): bool => \mindstellar\security\RateLimit::hit($context, $key, $max, $window);
+        $this->guestGate = $guestGate ?? static function (int $max): bool {
+            if (\mindstellar\security\ActionThrottle::exceededFor(self::THROTTLE_GUEST, $max)) {
+                return false;
+            }
+            \mindstellar\security\ActionThrottle::record(self::THROTTLE_GUEST);
+
+            return true;
+        };
+    }
+
+    /**
+     * A buyer's request, from the site or the API. A signed-in buyer books at once with their
+     * account's address; a guest gets an e-mail with a link that makes the booking.
+     *
+     * @param array<string,mixed> $input item, start, end, name, email, phone, note
+     *
+     * @return array{outcome:string,booking:array<string,mixed>|null} outcome is ASKED, or the new booking's status
+     * @throws BookingException
+     */
+    public function requestOrBook(array $input, int $userId, string $accountEmail = ''): array
+    {
+        if ($userId > 0) {
+            $this->throttleUser($userId);
+            $booking = $this->book($this->prepare($input, $userId, $accountEmail));
+
+            return array('outcome' => (string) $booking['s_status'], 'booking' => $booking);
+        }
+        if (!$this->config->guests) {
+            throw new BookingException('guests');
+        }
+        if (!($this->guestGate)($this->config->guestLimit)) {
+            throw new BookingException('limit');
+        }
+        $this->askGuest($this->prepare($input));
+
+        return array('outcome' => self::ASKED, 'booking' => null);
+    }
+
+    /**
+     * What a link from an e-mail is for: a guest's request to confirm, a booking to cancel, or nothing.
+     *
+     * @return array{kind:string,token:string,item:int,request:array<string,mixed>|null,booking:array<string,mixed>|null,title:string,when:string}
+     *         kind is 'request', 'cancel' or 'none'
+     */
+    public function resolveLink(string $token): array
+    {
+        $link = array('kind' => 'none', 'token' => '', 'item' => 0, 'request' => null, 'booking' => null, 'title' => '', 'when' => '');
+        if (!preg_match('/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/', $token)) {
+            return $link;
+        }
+        $link['token'] = $token;
+        $now           = ($this->clock)();
+        $id            = Token::openRequest($token, $now);
+        if ($id !== null) {
+            $request = $this->store->guest($id);
+            if ($request === null) {
+                return $link;
+            }
+            $item = $this->store->item((int) $request['item']);
+
+            return array(
+                'kind'    => 'request',
+                'item'    => (int) $request['item'],
+                'request' => $request,
+                'title'   => (string) ($item['s_title'] ?? ''),
+                'when'    => $this->notifier->when(array(
+                    's_mode'   => $request['mode'],
+                    'dt_start' => \mindstellar\database\UtcDatetime::format((int) $request['start']),
+                    'dt_end'   => \mindstellar\database\UtcDatetime::format((int) $request['end']),
+                )),
+            ) + $link;
+        }
+        $bookingId = Token::peekCancel($token, $now);
+        $booking   = $bookingId !== null ? $this->store->find($bookingId) : null;
+        if ($booking === null || Token::openCancel($token, (string) $booking['s_email'], $now) === null) {
+            return $link;
+        }
+
+        return array(
+            'kind'    => 'cancel',
+            'item'    => (int) $booking['fk_i_item_id'],
+            'booking' => $booking,
+            'title'   => (string) $booking['s_title'],
+            'when'    => $this->notifier->when($booking),
+        ) + $link;
+    }
+
+    /**
+     * Do what a link from an e-mail is for, once its owner pressed the button.
+     *
+     * @return array{outcome:string,booking:array<string,mixed>} outcome is the booking's new status
+     * @throws BookingException 'expired' or 'used' for a link that does nothing, or why it could not be done
+     */
+    public function actOnLink(string $token): array
+    {
+        $link    = $this->resolveLink($token);
+        $booking = $link['kind'] === 'cancel'
+            ? $this->move((int) $link['booking']['pk_i_id'], Status::CANCELLED, Status::BUYER, 0, (string) $link['booking']['s_email'])
+            : $this->confirmGuest($token);
+
+        return array('outcome' => (string) $booking['s_status'], 'booking' => $booking);
+    }
+
+    /**
+     * A listing's calendar feed, or null when the key is not this listing's.
+     */
+    public function feed(int $itemId, string $key, string $host): ?string
+    {
+        $listing = $itemId > 0 ? $this->store->listing($itemId) : null;
+        if ($listing === null || !Token::icalValid($itemId, (string) $listing['s_ical_salt'], $key)) {
+            return null;
+        }
+        $item = $this->store->item($itemId);
+        $now  = ($this->clock)();
+
+        return Ical::build((string) ($item['s_title'] ?? ''), $host, $this->store->feed($itemId, $now - 30 * 86400), $this->config->tz(), $now);
+    }
+
+    /**
+     * Give a seller's listing a new calendar feed address; the old one stops working.
+     *
+     * @throws BookingException 'owner'
+     */
+    public function resetFeed(int $itemId, int $userId): void
+    {
+        $item = $this->store->item($itemId);
+        if ($item === null || $userId <= 0 || (int) $item['fk_i_user_id'] !== $userId) {
+            throw new BookingException('owner');
+        }
+        $this->store->newIcalSalt($itemId);
     }
 
     /**
@@ -57,6 +196,9 @@ final class BookingService
         }
     }
 
+    /**
+     * The store, for plain reads from views and routes. Writes go through this service.
+     */
     public function store(): BookingStore
     {
         return $this->store;
@@ -369,6 +511,26 @@ final class BookingService
         ));
         [$today, $last] = Availability::window(($this->clock)(), $this->config->maxDays, $this->config->tz());
         $this->store->setBlocked($itemId, Availability::parseBlocked((string) ($input['blocked'] ?? ''), $today, $last), $today);
+    }
+
+    /**
+     * A listing was deleted: its bookings and settings go with it.
+     */
+    public function forgetListing(int $itemId): void
+    {
+        if ($itemId > 0) {
+            $this->store->forgetItem($itemId);
+        }
+    }
+
+    /**
+     * An account is being deleted: strip its details from its bookings as a buyer.
+     */
+    public function forgetBuyer(int $userId): void
+    {
+        if ($userId > 0) {
+            $this->store->anonymiseBuyer($userId, $this->store->accountEmail($userId));
+        }
     }
 
     /**

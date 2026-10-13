@@ -51,9 +51,7 @@ final class Privacy
      */
     public static function deleteUser($userId): void
     {
-        if ((int) $userId > 0) {
-            Plugin::service()->store()->anonymiseBuyer((int) $userId, self::email((int) $userId));
-        }
+        Plugin::service()->forgetBuyer((int) $userId);
     }
 
     /**

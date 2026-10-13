@@ -68,7 +68,7 @@ $categoryTable = static function () use ($d): void {
 return array(
     'title'  => __('Booking Calendar', $d),
     'menu'   => 'plugins',
-    'intro'  => __('Let buyers book listings for dates or time slots. Choose which categories take bookings; sellers turn it on for each listing from their account.', $d),
+    'intro'  => __('Let buyers book listings for dates or time slots. Choose which categories take bookings; sellers turn it on for each listing from their account. Deactivating the plugin keeps every booking; uninstalling it deletes all bookings and these settings.', $d),
     'groups' => array(
         array(
             'title'  => __('Categories', $d),
@@ -187,8 +187,8 @@ return array(
                 array(
                     'type'     => 'number',
                     'name'     => 'guest_limit',
-                    'label'    => __('Guest requests per hour from one address', $d),
-                    'help'     => __('0 means no limit.', $d),
+                    'label'    => __('Guest requests per hour from one IP address', $d),
+                    'help'     => __('Counted per IP address, or per /64 network for IPv6. 0 means no limit.', $d),
                     'default'  => 5,
                     'depends'  => 'guests',
                     'attrs'    => array('min' => 0, 'max' => 1000),

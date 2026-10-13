@@ -15,14 +15,11 @@ namespace mindstellar\booking\Http;
 
 use mindstellar\booking\Availability;
 use mindstellar\booking\BookingException;
-use mindstellar\booking\Ical;
-use mindstellar\booking\Notifier;
+use mindstellar\booking\BookingService;
 use mindstellar\booking\Plugin;
 use mindstellar\booking\Status;
-use mindstellar\booking\Token;
-use mindstellar\database\UtcDatetime;
-use mindstellar\security\ActionThrottle;
 use Params;
+use View;
 
 /**
  * The public routes: the calendar's data, a request, a guest's link, the account page's
@@ -30,14 +27,8 @@ use Params;
  */
 final class Front
 {
-    /** Throttle context for guest requests. */
-    public const THROTTLE = 'booking_request';
-
     /** Seconds a month of the calendar is kept in core's cache. */
     private const CACHE_TTL = 300;
-
-    /** What a guest's link page shows, read by views/guest.php. */
-    public static array $guest = array();
 
     /**
      * GET booking/availability/{item}?from=Y-m-d&v=version: one month of the calendar as JSON.
@@ -72,8 +63,7 @@ final class Front
     }
 
     /**
-     * POST booking/request: a buyer asks for dates. A signed-in buyer books at once; a guest
-     * gets an e-mail with a link that makes the booking.
+     * POST booking/request: a buyer asks for dates. The service decides what happens.
      */
     public static function request(): void
     {
@@ -84,38 +74,21 @@ final class Front
         }
         osc_csrf_check();
 
-        $service = Plugin::service();
-        $userId  = osc_is_web_user_logged_in() ? (int) osc_logged_user_id() : 0;
-        $input   = array(
-            'item'  => $itemId,
-            'start' => Params::getParamString('start'),
-            'end'   => Params::getParamString('end'),
-            'name'  => Params::getParamString('name'),
-            'email' => Params::getParamString('email'),
-            'phone' => Params::getParamString('phone'),
-            'note'  => Params::getParamString('note'),
-        );
+        $userId = osc_is_web_user_logged_in() ? (int) osc_logged_user_id() : 0;
         try {
-            if ($userId === 0) {
-                if (!$service->config()->guests) {
-                    throw new BookingException('guests');
-                }
-                if (ActionThrottle::exceededFor(self::THROTTLE, $service->config()->guestLimit)) {
-                    throw new BookingException('limit');
-                }
-            } else {
-                $service->throttleUser($userId);
-            }
-            $request = $service->prepare($input, $userId, $userId > 0 ? (string) osc_logged_user_email() : '');
-            if ($userId > 0) {
-                $booking = $service->book($request);
-                osc_add_flash_ok_message($booking['s_status'] === Status::CONFIRMED
-                    ? __('Your booking is confirmed. We sent you an e-mail with the details.', 'booking')
-                    : __('Your request was sent. The seller will accept or decline it, and we will e-mail you.', 'booking'));
-            } else {
-                $service->askGuest($request);
-                ActionThrottle::record(self::THROTTLE);
+            $result = Plugin::service()->requestOrBook(array(
+                'item'  => $itemId,
+                'start' => Params::getParamString('start'),
+                'end'   => Params::getParamString('end'),
+                'name'  => Params::getParamString('name'),
+                'email' => Params::getParamString('email'),
+                'phone' => Params::getParamString('phone'),
+                'note'  => Params::getParamString('note'),
+            ), $userId, $userId > 0 ? (string) osc_logged_user_email() : '');
+            if ($result['outcome'] === BookingService::ASKED) {
                 osc_add_flash_info_message(__('Almost done: we sent you an e-mail. Open the link in it to send your request.', 'booking'));
+            } else {
+                self::flashBooked($result['outcome']);
             }
         } catch (BookingException $e) {
             osc_add_flash_error_message($e->getMessage());
@@ -131,63 +104,35 @@ final class Front
     {
         $service = Plugin::service();
         $token   = (string) Params::getParamString('t');
-        if (!preg_match('/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/', $token)) {
-            $token = '';
-        }
-        $guestId = $token !== '' ? Token::openRequest($token) : null;
-        $request = $guestId !== null ? $service->store()->guest($guestId) : null;
-        $cancel  = $token !== '' && $guestId === null ? Token::peekCancel($token) : null;
-        $booking = $cancel !== null ? $service->store()->find($cancel) : null;
-        if ($booking !== null && Token::openCancel($token, (string) $booking['s_email']) === null) {
-            $booking = null;
-        }
 
-        if (self::isPost() && ($request !== null || $booking !== null)) {
+        if (self::isPost()) {
             osc_csrf_check();
             try {
-                if ($request !== null) {
-                    $made = $service->confirmGuest($token);
-                    osc_add_flash_ok_message($made['s_status'] === Status::CONFIRMED
-                        ? __('Your booking is confirmed. We sent you an e-mail with the details.', 'booking')
-                        : __('Your request was sent. The seller will accept or decline it, and we will e-mail you.', 'booking'));
-                    osc_redirect_to(osc_item_url_ns((int) $made['fk_i_item_id']));
+                $result = $service->actOnLink($token);
+                if ($result['outcome'] === Status::CANCELLED) {
+                    osc_add_flash_ok_message(__('The booking is cancelled. We let the seller know.', 'booking'));
+                } else {
+                    self::flashBooked($result['outcome']);
                 }
-                $done = $service->move((int) $booking['pk_i_id'], Status::CANCELLED, Status::BUYER, 0, (string) $booking['s_email']);
-                osc_add_flash_ok_message(__('The booking is cancelled. We let the seller know.', 'booking'));
-                osc_redirect_to(osc_item_url_ns((int) $done['fk_i_item_id']));
+                osc_redirect_to(osc_item_url_ns((int) $result['booking']['fk_i_item_id']));
             } catch (BookingException $e) {
                 osc_add_flash_error_message($e->getMessage());
-                $back = $request !== null ? (int) $request['item'] : (int) $booking['fk_i_item_id'];
-                osc_redirect_to(osc_item_url_ns($back));
+                osc_redirect_to(Plugin::url(Plugin::ROUTE_GUEST, array('t' => $token)));
             }
         }
 
-        $title = '';
-        if ($request !== null) {
-            $item  = $service->store()->item((int) $request['item']);
-            $title = (string) ($item['s_title'] ?? '');
-        } elseif ($booking !== null) {
-            $title = (string) $booking['s_title'];
-        }
-        $notifier = new Notifier($service->config()->tz());
-        $when     = '';
-        if ($request !== null) {
-            $when = $notifier->when(array(
-                's_mode'   => $request['mode'],
-                'dt_start' => UtcDatetime::format((int) $request['start']),
-                'dt_end'   => UtcDatetime::format((int) $request['end']),
-            ));
-        } elseif ($booking !== null) {
-            $when = $notifier->when($booking);
-        }
-        self::$guest = array('token' => $token, 'request' => $request, 'booking' => $booking, 'title' => $title, 'when' => $when);
-        $heading = $request !== null ? __('Confirm your booking request', 'booking')
-            : ($booking !== null ? __('Cancel your booking', 'booking') : __('This link does not work', 'booking'));
-        if ($request === null && $booking === null) {
+        $link    = $service->resolveLink($token);
+        $heading = array(
+            'request' => __('Confirm your booking request', 'booking'),
+            'cancel'  => __('Cancel your booking', 'booking'),
+            'none'    => __('This link does not work', 'booking'),
+        )[$link['kind']];
+        if ($link['kind'] === 'none') {
             http_response_code(404);
         }
         header('Cache-Control: private, no-store');
         header('Referrer-Policy: no-referrer');
+        View::newInstance()->_exportVariableToView('booking_link', $link);
         osc_gui_view('', dirname(__DIR__, 2) . '/views/guest.php', array('heading' => $heading, 'title' => $heading));
     }
 
@@ -228,7 +173,7 @@ final class Front
                         'blocked'      => Params::getParamString('blocked'),
                     ));
                     if (Params::getParamBool('new_feed')) {
-                        $service->store()->newIcalSalt($itemId);
+                        $service->resetFeed($itemId, $userId);
                     }
                     $back = Plugin::url(Plugin::ROUTE_ACCOUNT, array('item' => $itemId));
                     osc_add_flash_ok_message(__('Booking settings saved.', 'booking'));
@@ -259,10 +204,9 @@ final class Front
      */
     public static function ical(): void
     {
-        $service = Plugin::service();
-        $itemId  = Params::getParamInt('item');
-        $listing = $itemId > 0 ? $service->store()->listing($itemId) : null;
-        if ($listing === null || !Token::icalValid($itemId, (string) $listing['s_ical_salt'], (string) Params::getParamString('key'))) {
+        $itemId = Params::getParamInt('item');
+        $ics    = Plugin::service()->feed($itemId, (string) Params::getParamString('key'), (string) (parse_url((string) osc_base_url(), PHP_URL_HOST) ?: 'localhost'));
+        if ($ics === null) {
             http_response_code(404);
             header('Content-Type: text/plain; charset=utf-8');
             header('Cache-Control: no-store');
@@ -270,19 +214,21 @@ final class Front
 
             return;
         }
-        $item = $service->store()->item($itemId);
-        $now  = time();
         header('Content-Type: text/calendar; charset=utf-8');
         header('Content-Disposition: inline; filename="booking-' . $itemId . '.ics"');
         header('Cache-Control: private, max-age=300');
         header('X-Robots-Tag: noindex');
-        echo Ical::build(
-            (string) ($item['s_title'] ?? ''),
-            (string) (parse_url((string) osc_base_url(), PHP_URL_HOST) ?: 'localhost'),
-            $service->store()->feed($itemId, $now - 30 * 86400),
-            $service->config()->tz(),
-            $now
-        );
+        echo $ics;
+    }
+
+    /**
+     * Tell the buyer how their booking stands.
+     */
+    private static function flashBooked(string $status): void
+    {
+        osc_add_flash_ok_message($status === Status::CONFIRMED
+            ? __('Your booking is confirmed. We sent you an e-mail with the details.', 'booking')
+            : __('Your request was sent. The seller will accept or decline it, and we will e-mail you.', 'booking'));
     }
 
     /**

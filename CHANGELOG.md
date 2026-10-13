@@ -16,3 +16,4 @@
 - Bookings are in the member's data export, and are made anonymous when the account is deleted.
 - Admin list of all bookings by status.
 - REST API: read a listing's calendar, send a booking request.
+- Uninstalling deletes all bookings and settings; deactivating keeps them.

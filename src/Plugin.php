@@ -63,15 +63,22 @@ final class Plugin
     }
 
     /**
-     * Drop the tables, the settings and the stored link claims.
+     * Drop the tables, the settings and the stored guest requests: every booking is gone.
      */
     public static function uninstall(): void
     {
-        BookingStore::drop();
-        MigrationRunner::forPlugin(self::FOLDER)->forget();
+        foreach (BookingStore::TABLES as $table) {
+            osc_db_execute('DROP TABLE IF EXISTS ' . DB_TABLE_PREFIX . $table);
+        }
+        // Before Shopclass 7.0 there is no plugin ledger to clear.
+        if (class_exists(MigrationRunner::class) && method_exists(MigrationRunner::class, 'forPlugin')) {
+            MigrationRunner::forPlugin(self::FOLDER)->forget();
+        }
         osc_db_execute('DELETE FROM ' . DB_TABLE_PREFIX . 't_preference WHERE s_section = ?', array(Config::PAGE));
         osc_reset_preferences();
-        osc_kv_delete_group(self::FOLDER);
+        if (function_exists('osc_kv_delete_group')) {
+            osc_kv_delete_group(self::FOLDER);
+        }
     }
 
     /**
@@ -140,6 +147,12 @@ final class Plugin
         osc_add_route(self::ROUTE_ADMIN, 'booking/admin/bookings' . $end, 'booking/admin/bookings', $folder . 'admin/bookings.php');
     }
 
+    /** Values that go into a route's path, by route; the rest go in the query string. */
+    private const PATH_ARGS = array(
+        self::ROUTE_AVAILABILITY => array('item'),
+        self::ROUTE_ICAL         => array('item', 'key'),
+    );
+
     /**
      * A route's address with $query added, encoded.
      *
@@ -147,11 +160,9 @@ final class Plugin
      */
     public static function url(string $route, array $query = array()): string
     {
-        $routes  = \Rewrite::getInstance()->getRoutes();
-        $pattern = (string) ($routes[$route]['url'] ?? '');
-        $path    = array();
-        foreach (array('item', 'key') as $name) {
-            if (isset($query[$name]) && strpos($pattern, '{' . $name . '}') !== false) {
+        $path = array();
+        foreach (self::PATH_ARGS[$route] ?? array() as $name) {
+            if (isset($query[$name])) {
                 $path[$name] = rawurlencode((string) $query[$name]);
                 unset($query[$name]);
             }
@@ -210,9 +221,7 @@ final class Plugin
      */
     public static function itemDeleted($itemId): void
     {
-        if ((int) $itemId > 0) {
-            self::service()->store()->forgetItem((int) $itemId);
-        }
+        self::service()->forgetListing((int) $itemId);
     }
 
     /**

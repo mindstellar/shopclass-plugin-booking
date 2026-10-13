@@ -8,8 +8,11 @@ send a request, and both sides get e-mails as it is accepted, declined or cancel
 
 - Shopclass 7.0 or later
 - PHP 8.0 or later
-- Cron or core's auto-cron, so queued e-mails go out and old requests expire. A Valkey or
-  Redis cache and the job worker make both faster, but are not needed.
+- Nothing else: it works on plain shared hosting.
+
+E-mails and the expiry of old requests run on core's job queue, so a request never waits on
+the mail server. With only core's auto-cron, e-mails go out within minutes as visitors load
+pages. With a real cron line or the job worker (`php oc-cli.php jobs:work`), they go out at once.
 
 ## Setup
 
@@ -31,8 +34,8 @@ Listings in other categories show nothing, and pages without a calendar load not
   the seller chose auto-confirm.
 - A guest gets an e-mail with a link. The request is kept on the server and the link carries
   only a random id; the booking is made when they open it and press the button, so the seller
-  never sees unconfirmed addresses. Guests are limited per address per hour, and can be
-  switched off.
+  never sees unconfirmed addresses. Guests are limited per IP address per hour (per /64
+  network for IPv6), and can be switched off.
 - A signed-in buyer always books with their account's e-mail address. Accounts are limited
   per hour (site and API together), and in how many requests they may have waiting, per
   listing and in all.
@@ -45,6 +48,11 @@ Listings in other categories show nothing, and pages without a calendar load not
 
 Times are stored in UTC and shown in the site's time zone. Slots follow the clock on the
 wall, so a day with a clock change has one slot more or less.
+
+## Deactivate or uninstall
+
+Deactivating the plugin hides the calendars and keeps every booking. **Uninstalling deletes
+all bookings, closed dates, listing settings and the plugin's settings**, and cannot be undone.
 
 ## Calendar feed
 
@@ -76,7 +84,8 @@ The account pages use core's `oe-*` classes.
 With the API on, two endpoints are added:
 
 - `GET /api/v1/ext/booking/listings/{id}/availability?from=YYYY-MM-DD`: one month of the
-  calendar. Any key.
+  calendar. It needs an API key, but any key or token will do, including a public
+  (read-only) key.
 - `POST /api/v1/ext/booking/listings/{id}/requests`: a booking request for the signed-in
   user, with `start` (a date for nights, `YYYY-MM-DDTHH:MM` local time for a slot), `end`
   (check-out date, nights only), and optional `name`, `phone`, `note`. The account's own

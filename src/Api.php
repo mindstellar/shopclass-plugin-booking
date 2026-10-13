@@ -123,20 +123,21 @@ final class Api
     {
         $service = Plugin::service();
         $userId  = (int) $call->userId();
+        if ($userId <= 0) {
+            throw ProblemException::of('forbidden', 'Booking requests need a user\'s key or token.');
+        }
         $input   = $call->input();
         $user    = class_exists('User') ? \User::getInstance()->findByPrimaryKey($userId) : array();
         $user    = is_array($user) ? $user : array();
         try {
-            $service->throttleUser($userId);
-            $request = $service->prepare(array(
+            $booking = $service->requestOrBook(array(
                 'item'  => (int) $call->intArg('id'),
                 'start' => (string) ($input['start'] ?? ''),
                 'end'   => (string) ($input['end'] ?? ''),
                 'name'  => (string) ($input['name'] ?? ($user['s_name'] ?? '')),
                 'phone' => (string) ($input['phone'] ?? ''),
                 'note'  => (string) ($input['note'] ?? ''),
-            ), $userId, (string) ($user['s_email'] ?? ''));
-            $booking = $service->book($request);
+            ), $userId, $service->store()->accountEmail($userId))['booking'];
         } catch (BookingException $e) {
             if ($e->reason() === 'off') {
                 throw ProblemException::notFound($e->getMessage());

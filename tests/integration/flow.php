@@ -96,7 +96,7 @@ try {
     $threw = $e->getMessage();
 }
 pin('core accepts the declaration', null, $threw);
-$fields = \mindstellar\settings\SettingsPageRegistry::instance()->fields(Config::PAGE);
+$fields = \mindstellar\settings\SettingsPageRegistry::getInstance()->fields(Config::PAGE);
 pin('guests may ask until the admin says no', true, (bool) osc_settings_value(Config::PAGE, 'guests'));
 pin('an hour slot by default', 60, (int) osc_settings_value(Config::PAGE, 'slot_minutes'));
 check('a slot under 5 minutes is refused', osc_settings_validate($fields['slot_minutes'], '3') !== null);
@@ -351,6 +351,48 @@ pin('deleting the account leaves no booking with their details', 0, (int) $scala
 pin('their bookings stay for the seller, anonymous', 'Deleted user', $store->find((int) $asGuest['pk_i_id'])['s_name']);
 pin('and the ones still holding dates are cancelled', 0, (int) $scalar("SELECT COUNT(*) FROM {$p}t_booking WHERE s_name = 'Deleted user' AND b_hold = 1"));
 pin('other buyers are untouched', 'gus@example.test', $store->find((int) $made['pk_i_id'])['s_email']);
+
+harness_section('one rule for site and API');
+
+$mails  = array();
+$result = $service->requestOrBook($req(array('item' => $cottage, 'start' => $day(25), 'end' => $day(27), 'email' => 'relay@victim.test')), $stranger, 'eve@example.test');
+pin('a signed-in request books at once', Status::PENDING, $result['outcome']);
+pin('with the account address', 'eve@example.test', $result['booking']['s_email']);
+$result = $service->requestOrBook($req(array('item' => $cottage, 'start' => $day(33), 'end' => $day(35), 'email' => 'hal@example.test')), 0);
+pin('a guest request asks them to confirm', BookingService::ASKED, $result['outcome']);
+pin('and books nothing yet', null, $result['booking']);
+$shut = new BookingService(new Config(array($rentals => A::NIGHTS), 60, 2, 60, 48, false, 5, 'Europe/London'), $store, $notifier);
+pin('guests can be switched off', 'guests', $reason(static fn () => $shut->requestOrBook($req(array('item' => $cottage, 'start' => $day(33), 'end' => $day(35), 'email' => 'hal@example.test')), 0)));
+$gated = new BookingService($config, $store, $notifier, null, null, static fn (int $max): bool => false);
+pin('a guest over the address limit is refused', 'limit', $reason(static fn () => $gated->requestOrBook($req(array('item' => $cottage, 'start' => $day(33), 'end' => $day(35), 'email' => 'hal@example.test')), 0)));
+pin('the address limit does not apply to accounts', Status::PENDING, $gated->requestOrBook($req(array('item' => $cottage, 'start' => $day(36), 'end' => $day(38))), $stranger, 'eve@example.test')['outcome']);
+
+harness_section('e-mail links');
+
+$link = $service->askGuest($service->prepare($req(array('item' => $cottage, 'start' => $day(47), 'end' => $day(49), 'name' => 'Ida', 'email' => 'ida@example.test'))));
+$seen = $service->resolveLink($link);
+pin('a request link is read as one', array('request', $cottage, 'Sea cottage'), array($seen['kind'], $seen['item'], $seen['title']));
+check('with its dates in words', $seen['when'] !== '');
+$done = $service->actOnLink($link);
+pin('pressing the button sends the request', Status::PENDING, $done['outcome']);
+pin('then the link does nothing', 'none', $service->resolveLink($link)['kind']);
+pin('and says it was used', 'used', $reason(static fn () => $service->actOnLink($link)));
+$cancelLink = \mindstellar\booking\Token::cancel((int) $done['booking']['pk_i_id'], 'ida@example.test', time() + 86400);
+pin('a cancel link is read as one', 'cancel', $service->resolveLink($cancelLink)['kind']);
+pin('and cancels the booking', Status::CANCELLED, $service->actOnLink($cancelLink)['outcome']);
+pin('a cancel link for another address does nothing', 'none', $service->resolveLink(\mindstellar\booking\Token::cancel((int) $done['booking']['pk_i_id'], 'eve@example.test', time() + 86400))['kind']);
+pin('junk does nothing', 'none', $service->resolveLink('<script>.x')['kind']);
+pin('and pressing it says it expired', 'expired', $reason(static fn () => $service->actOnLink('nonsense')));
+
+harness_section('feed address');
+
+$salt = (string) $store->listing($cottage)['s_ical_salt'];
+pin('only the owner can change it', 'owner', $reason(static fn () => $service->resetFeed($cottage, $stranger)));
+pin('which leaves it as it was', $salt, (string) $store->listing($cottage)['s_ical_salt']);
+$service->resetFeed($cottage, $seller);
+check('the owner gets a new one', (string) $store->listing($cottage)['s_ical_salt'] !== $salt);
+pin('the old address stops working', null, $service->feed($cottage, \mindstellar\booking\Token::ical($cottage, $salt), 'example.test'));
+check('the new one works', strpos((string) $service->feed($cottage, \mindstellar\booking\Token::ical($cottage, (string) $store->listing($cottage)['s_ical_salt']), 'example.test'), 'BEGIN:VCALENDAR') === 0);
 
 harness_section('cleanup');
 
