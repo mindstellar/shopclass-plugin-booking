@@ -44,7 +44,7 @@ final class BookingException extends RuntimeException
     {
         switch ($reason) {
             case 'taken':
-                return __('Those dates were just booked by someone else. Please pick others.', 'booking');
+                return __('Someone else just booked that. Please pick another date or time.', 'booking');
             case 'past':
                 return __('That time has already passed.', 'booking');
             case 'beyond':
