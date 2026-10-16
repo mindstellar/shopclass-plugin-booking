@@ -20,7 +20,8 @@ $d = 'booking';
 
 return array(
     'title'  => __('Booking Calendar', $d),
-    'menu'   => 'plugins',
+    // Admin::menu() lists it in the plugin's own group, beside Bookings.
+    'menu'   => '',
     // Core wraps the help in one <p>, so each fact closes it and opens the next.
     'help'   => implode('</p><p>', array_map('osc_esc_html', array(
         __('Sellers switch bookings on per listing under My account → Bookings, where they also set weekly hours, closed dates and auto-confirm.', $d),

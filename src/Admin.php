@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace mindstellar\booking;
 
 /**
- * The plugin's place in the admin: a Bookings screen under Plugins, beside the settings page.
+ * The plugin's place in the admin: one Booking Calendar group under Plugins, with Bookings and Settings.
  */
 final class Admin
 {
@@ -25,6 +25,7 @@ final class Admin
     {
         osc_add_admin_submenu_divider('plugins', __('Booking Calendar', 'booking'), 'booking', 'administrator');
         osc_add_admin_submenu_page('plugins', __('Bookings', 'booking'), osc_route_admin_url(Plugin::ROUTE_ADMIN), 'booking-bookings', 'administrator');
+        osc_add_admin_submenu_page('plugins', __('Settings', 'booking'), osc_settings_page_url(Config::PAGE), 'settings-page-' . Config::PAGE, 'administrator');
     }
 
     /**

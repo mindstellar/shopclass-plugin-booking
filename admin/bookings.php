@@ -45,7 +45,7 @@ foreach (Status::all() as $s) {
 echo '</ul>';
 
 echo '<div class="table-contains-actions osc-table-stack"><table class="table"><thead><tr>';
-foreach (array(__('ID', $d), __('Listing', $d), __('When', $d), __('Buyer', $d), __('Status', $d), __('Asked', $d)) as $title) {
+foreach (array(__('Status', $d), __('ID', $d), __('Listing', $d), __('When', $d), __('Buyer', $d), __('Asked', $d)) as $title) {
     echo '<th>' . osc_esc_html($title) . '</th>';
 }
 echo '</tr></thead><tbody>';
@@ -54,14 +54,14 @@ if ($rows === array()) {
 }
 foreach ($rows as $b) {
     echo '<tr>';
+    echo '<td>';
+    osc_admin_status(Status::holds((string) $b['s_status']) ? 'active' : 'inactive', Status::label((string) $b['s_status']));
+    echo '</td>';
     echo '<td>' . (int) $b['pk_i_id'] . '</td>';
     echo '<td><a href="' . osc_esc_html((string) osc_item_url_ns((int) $b['fk_i_item_id'])) . '" target="_blank" rel="noopener">' . osc_esc_html((string) $b['s_title']) . '</a></td>';
     echo '<td>' . osc_esc_html($notifier->when($b)) . '</td>';
     echo '<td>' . osc_esc_html((string) $b['s_name']) . '<br><a href="mailto:' . osc_esc_html((string) $b['s_email']) . '">' . osc_esc_html((string) $b['s_email']) . '</a>'
         . ((string) $b['s_phone'] !== '' ? '<br>' . osc_esc_html((string) $b['s_phone']) : '') . '</td>';
-    echo '<td>';
-    osc_admin_status(Status::holds((string) $b['s_status']) ? 'active' : 'inactive', Status::label((string) $b['s_status']));
-    echo '</td>';
     echo '<td>' . osc_admin_when((string) $b['dt_created'] . ' UTC') . '</td>';
     echo '</tr>';
 }
