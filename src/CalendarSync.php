@@ -169,17 +169,18 @@ final class CalendarSync
      */
     public static function publicIp(string $ip): bool
     {
-        $ip = self::host($ip);
-        if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false) {
-            return false;
-        }
-        $bin = (string) @inet_pton($ip);
+        $ip  = self::host($ip);
+        $bin = filter_var($ip, FILTER_VALIDATE_IP) === false ? '' : (string) @inet_pton($ip);
         if ($bin === '') {
             return false;
         }
         // An IPv4 address inside IPv6 (::ffff:a.b.c.d, 64:ff9b::a.b.c.d) is judged as IPv4.
+        // PHP 8.3 calls the whole ::ffff: range reserved, so this comes before the range check.
         if (strlen($bin) === 16 && (strncmp($bin, str_repeat("\0", 10) . "\xff\xff", 12) === 0 || strncmp($bin, "\x00\x64\xff\x9b" . str_repeat("\0", 8), 12) === 0)) {
             return self::publicIp((string) inet_ntop(substr($bin, 12)));
+        }
+        if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false) {
+            return false;
         }
         foreach (self::BLOCKED_NETS as [$net, $bits]) {
             $netBin = (string) inet_pton($net);
