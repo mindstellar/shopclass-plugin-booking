@@ -153,8 +153,9 @@ final class Config
     private static function coreParents(int $categoryId): array
     {
         $parents = array();
+        // hierarchy() runs from the category up to the root.
         $chain   = \Category::getInstance()->hierarchy($categoryId);
-        foreach (array_reverse(is_array($chain) ? $chain : array()) as $row) {
+        foreach (is_array($chain) ? $chain : array() as $row) {
             $id = (int) ($row['pk_i_id'] ?? 0);
             if ($id > 0 && $id !== $categoryId) {
                 $parents[] = $id;

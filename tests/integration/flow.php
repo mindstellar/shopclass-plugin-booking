@@ -181,9 +181,9 @@ $fields = \mindstellar\settings\SettingsPageRegistry::getInstance()->fields(Conf
 pin('guests may ask until the admin says no', true, (bool) osc_settings_value(Config::PAGE, 'guests'));
 pin('an hour slot by default', 60, (int) osc_settings_value(Config::PAGE, 'slot_minutes'));
 check('a slot under 5 minutes is refused', osc_settings_validate($fields['slot_minutes'], '3') !== null);
-Params::setParam('booking_cat', array('4' => 'nights', '9' => 'slots', '12' => 'weekly', 'x' => 'off'));
-pin('the category table is stored as JSON of known modes', '{"4":"nights","9":"slots"}', osc_settings_sanitize($fields['categories']));
-Params::setParam('booking_cat', '');
+Params::setParam('categories', array('4' => 'nights', '9' => 'slots', '12' => 'weekly', 'x' => 'off', '20' => 'off'));
+pin('the category modes are stored as JSON of known modes', '{"4":"nights","9":"slots","20":"off"}', osc_settings_sanitize($fields['categories']));
+Params::setParam('categories', '');
 $read = Config::get();
 pin('the settings read back with their defaults', array(60, 1, 180, 48, 5), array($read->slotMinutes, $read->minNights, $read->maxDays, $read->expiryHours, $read->guestLimit));
 Config::reset();
@@ -215,6 +215,11 @@ $barber   = seed_item($admin, $services, $seller, 'Haircut');
 $car      = seed_item($admin, $carsCat, $seller, 'Old car');
 $admin->query("UPDATE {$p}t_item SET s_contact_email = 'seller@example.test'");
 
+defined('OC_ADMIN') || define('OC_ADMIN', false);
+$seaside = seed_category($admin, 'Seaside', $cottages);
+Config::$parents = null;
+$real = new Config(array($rentals => A::NIGHTS, $cottages => A::SLOTS), 60, 2, 60, 48, true, 5, 'Europe/London', 100, 3, 10);
+pin('on core\'s own tree the nearest parent decides', A::SLOTS, $real->modeForCategory($seaside));
 Config::$parents = static fn (int $id): array => $id === $cottages ? array($rentals) : array();
 $config = new Config(array($rentals => A::NIGHTS, $services => A::SLOTS), 60, 2, 60, 48, true, 5, 'Europe/London', 100, 3, 10);
 $mails  = array();
