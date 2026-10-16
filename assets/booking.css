@@ -54,7 +54,7 @@
 .booking-title { flex: 1 1 auto; margin: 0; font-size: 1.25rem; font-weight: 700; line-height: 1.25; }
 .booking-note { margin: 0; font-weight: 600; }
 .booking-header .booking-hint { flex-basis: 100%; margin: 0; }
-.booking-hint, .booking-fine, .booking-legend, .booking-owner { color: var(--booking-soft); font-size: .875rem; }
+.booking-hint, .booking-fine, .booking-legend { color: var(--booking-soft); font-size: .875rem; }
 
 .booking-message { margin: 0 0 1rem; padding: .75rem 1rem; border-radius: .5rem; background: var(--booking-ok); font-weight: 500; }
 .booking-message--error { background: var(--booking-error); }
@@ -146,6 +146,5 @@
 }
 .booking .booking-submit:hover { background: color-mix(in srgb, var(--booking-pick) 86%, #000); color: var(--booking-pick-text) !important; }
 .booking-fine { margin: -.375rem 0 0; text-align: center; }
-.booking-owner { margin: 1rem 0 0; padding-top: 1rem; border-top: 1px solid var(--booking-line); }
-.booking-off { padding: 1rem 1.25rem; }
-.booking-off .booking-owner { margin: 0; padding: 0; border: 0; }
+.booking-off { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem 1rem; }
+.booking-off .booking-submit { width: auto; min-height: 2.5rem; }

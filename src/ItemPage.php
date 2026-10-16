@@ -47,9 +47,9 @@ final class ItemPage
             return;
         }
         self::$current = array('item' => $itemId, 'mode' => $mode, 'listing' => $listing, 'owner' => $isOwner, 'on' => $on);
+        osc_register_style('booking-calendar', Plugin::asset('assets/booking.css'));
+        osc_enqueue_style('booking-calendar');
         if ($on) {
-            osc_register_style('booking-calendar', Plugin::asset('assets/booking.css'));
-            osc_enqueue_style('booking-calendar');
             osc_register_script('booking-calendar', Plugin::asset('assets/booking.js'));
             osc_enqueue_script('booking-calendar');
         }

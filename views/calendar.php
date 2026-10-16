@@ -24,8 +24,8 @@ $uid    = 'booking-' . (int) $booking['item'];
 if (!$booking['on']) {
     if ($booking['owner']) { ?>
 <section class="booking booking-off" id="booking">
-    <p class="booking-owner"><?php echo osc_esc_html(__('Bookings are off for this listing.', $d)); ?>
-        <a href="<?php echo osc_esc_html($booking['manage']); ?>"><?php echo osc_esc_html(__('Turn on bookings', $d)); ?></a></p>
+    <p class="booking-as"><?php echo osc_esc_html(__('Bookings are off for this listing.', $d)); ?></p>
+    <a class="booking-submit" href="<?php echo osc_esc_html($booking['manage']); ?>"><?php echo osc_esc_html(__('Turn on bookings', $d)); ?></a>
 </section>
     <?php }
 
@@ -93,6 +93,12 @@ $messages = array(
             <div class="booking-slots" data-booking-slots hidden></div>
         </div>
 
+        <?php if ($booking['owner']) { ?>
+        <div class="booking-form booking-owner-panel">
+            <p class="booking-as"><?php echo osc_esc_html(__('This is your listing. Buyers send their requests from here, and you answer them in your account.', $d)); ?></p>
+            <a class="booking-submit" href="<?php echo osc_esc_html($booking['manage']); ?>"><?php echo osc_esc_html(__('Manage bookings for this listing', $d)); ?></a>
+        </div>
+        <?php } else { ?>
         <form class="booking-form nocsrf" method="post" action="<?php echo osc_esc_html($booking['action']); ?>">
             <?php echo osc_csrf_token_form(); ?>
             <input type="hidden" name="item" value="<?php echo (int) $booking['item']; ?>">
@@ -142,8 +148,6 @@ $messages = array(
                 <p class="booking-fine"><?php echo osc_esc_html(__('Sign in to send a booking request.', $d)); ?></p>
             <?php } ?>
         </form>
+        <?php } ?>
     </div>
-    <?php if ($booking['owner']) { ?>
-        <p class="booking-owner"><a href="<?php echo osc_esc_html($booking['manage']); ?>"><?php echo osc_esc_html(__('Manage bookings for this listing', $d)); ?></a></p>
-    <?php } ?>
 </section>

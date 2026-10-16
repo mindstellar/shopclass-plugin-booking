@@ -82,7 +82,7 @@ msgstr ""
 msgid "Booking Calendar needs Shopclass 7.0 and is switched off. Update Shopclass to use it."
 msgstr ""
 
-#: views/calendar.php:117
+#: views/calendar.php:123
 msgid "Booking as %1$s, %2$s"
 msgstr ""
 
@@ -192,11 +192,11 @@ msgstr ""
 msgid "Check availability"
 msgstr ""
 
-#: views/calendar.php:102
+#: views/calendar.php:108
 msgid "Check-in"
 msgstr ""
 
-#: views/calendar.php:105
+#: views/calendar.php:111
 msgid "Check-out"
 msgstr ""
 
@@ -245,7 +245,7 @@ msgstr ""
 msgid "Counts requests from the site and the API. 0 means no limit."
 msgstr ""
 
-#: views/calendar.php:109
+#: views/calendar.php:115
 msgid "Date and time"
 msgstr ""
 
@@ -277,7 +277,7 @@ msgstr ""
 msgid "Deleted user"
 msgstr ""
 
-#: views/calendar.php:127
+#: views/calendar.php:133
 msgid "E-mail"
 msgstr ""
 
@@ -385,11 +385,11 @@ msgstr ""
 msgid "Make a new address and stop the old one"
 msgstr ""
 
-#: views/calendar.php:147
+#: views/calendar.php:99
 msgid "Manage bookings for this listing"
 msgstr ""
 
-#: views/calendar.php:133
+#: views/calendar.php:139
 msgid "Message to the seller (optional)"
 msgstr ""
 
@@ -477,7 +477,7 @@ msgstr ""
 msgid "Paste the calendar address (.ics) from Airbnb, Booking.com, Google Calendar and so on, one per line, up to 3. Dates booked there are closed here. Checked every hour."
 msgstr ""
 
-#: views/calendar.php:130
+#: views/calendar.php:136
 msgid "Phone (optional)"
 msgstr ""
 
@@ -561,7 +561,7 @@ msgstr ""
 msgid "Send a booking e-mail"
 msgstr ""
 
-#: views/calendar.php:136
+#: views/calendar.php:142
 msgid "Send booking request"
 msgstr ""
 
@@ -578,12 +578,16 @@ msgstr ""
 msgid "Shown above the calendar, such as \"80 a night, cleaning 30\"."
 msgstr ""
 
-#: views/calendar.php:141
+#: views/calendar.php:147
 msgid "Sign in to book"
 msgstr ""
 
-#: views/calendar.php:142
+#: views/calendar.php:148
 msgid "Sign in to send a booking request."
+msgstr ""
+
+#: src/BookingException.php:47
+msgid "Someone else just booked that. Please pick another date or time."
 msgstr ""
 
 #: src/Notifier.php:175
@@ -663,7 +667,7 @@ msgstr ""
 msgid "The minimum stay is %d nights."
 msgstr ""
 
-#: views/calendar.php:139
+#: views/calendar.php:145
 msgid "The seller accepts or declines by e-mail. You pay nothing here."
 msgstr ""
 
@@ -692,6 +696,10 @@ msgstr ""
 msgid "This booking was cancelled."
 msgstr ""
 
+#: views/calendar.php:98
+msgid "This is your listing. Buyers send their requests from here, and you answer them in your account."
+msgstr ""
+
 #: src/Http/Front.php:128
 msgid "This link does not work"
 msgstr ""
@@ -707,10 +715,6 @@ msgstr ""
 #: src/BookingService.php:414
 #: src/BookingService.php:429
 msgid "This request was already confirmed."
-msgstr ""
-
-#: src/BookingException.php:47
-msgid "Those dates were just booked by someone else. Please pick others."
 msgstr ""
 
 #: views/account.php:89
@@ -794,7 +798,7 @@ msgstr ""
 msgid "Waiting requests one buyer may have on one listing"
 msgstr ""
 
-#: views/calendar.php:138
+#: views/calendar.php:144
 msgid "We will e-mail you a link to confirm your request."
 msgstr ""
 
@@ -834,7 +838,7 @@ msgstr ""
 msgid "You have not booked anything yet."
 msgstr ""
 
-#: views/calendar.php:139
+#: views/calendar.php:145
 msgid "Your booking is confirmed at once. You pay nothing here."
 msgstr ""
 
@@ -858,7 +862,7 @@ msgstr ""
 msgid "Your listings"
 msgstr ""
 
-#: views/calendar.php:123
+#: views/calendar.php:129
 msgid "Your name"
 msgstr ""
 

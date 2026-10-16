@@ -74,7 +74,9 @@
         }
 
         function say(text) {
-            status.textContent = text || '';
+            if (status) {
+                status.textContent = text || '';
+            }
         }
 
         function state(date) {
@@ -273,7 +275,7 @@
         }
 
         function pick(date) {
-            if (!selectable(date)) {
+            if (!startInput || !selectable(date)) {
                 return;
             }
             focusDate = date;
