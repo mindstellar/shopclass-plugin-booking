@@ -99,9 +99,39 @@ takes its bookings with it.
 
 The listing page calendar is printed on the `item_detail` hook, which the bundled themes
 fire. Its markup uses classes starting with `booking-` (`.booking`, `.booking-day`,
-`.booking-day--free`, `.booking-slot`, `.booking-form` and so on) and its colours come from
-custom properties on `.booking` (`--booking-free`, `--booking-booked`, `--booking-pick`).
-The account pages use core's `oe-*` classes.
+`.booking-day--free`, `.booking-slot`, `.booking-form` and so on). The account pages use
+core's `oe-*` classes.
+
+Colours come from custom properties on `.booking`. Set them in the theme's CSS:
+
+| Property | What it colours |
+|---|---|
+| `--booking-pick` | Chosen days and slots, the submit button, focus rings |
+| `--booking-pick-text` | Text on `--booking-pick` |
+| `--booking-free` | Free days and slots |
+| `--booking-booked` | Booked days |
+| `--booking-muted` | Hover on the month arrows |
+| `--booking-line` | Borders |
+| `--booking-soft` | Hints, legend, closed days |
+| `--booking-ok` | The success message |
+| `--booking-error` | The error message |
+| `--booking-radius` | Corner radius of the card |
+
+Most of them are mixed from `--booking-pick` and the text colour, so often one is enough:
+
+```css
+.booking { --booking-pick: #b45309; }
+```
+
+Most rules are written as `.booking .booking-x`, so a theme rule needs the same two classes
+to win. Button text colours use `!important`, because some themes force the button colour
+that way; a theme that changes them needs `!important` too.
+
+To replace the stylesheet, remove it after the plugin adds it on `show_item`:
+
+```php
+osc_add_hook('show_item', function () { osc_remove_style('booking-calendar'); }, 10);
+```
 
 ## REST API
 
