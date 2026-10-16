@@ -69,6 +69,10 @@
         box.hidden = false;
         say(mode === 'nights' ? msg.checkIn : msg.pickDay);
 
+        function short(date) {
+            return new Date(parse(date)).toLocaleDateString(lang, {weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC'});
+        }
+
         function say(text) {
             status.textContent = text || '';
         }
@@ -277,6 +281,7 @@
                 sel.day = date;
                 sel.slot = null;
                 startInput.value = '';
+                say(msg.pickTime);
                 render();
                 var first = slotsBox.querySelector('.booking-slot:not([disabled])');
                 if (first) {
@@ -293,7 +298,7 @@
                 sel.end = date;
                 startInput.value = sel.start;
                 endInput.value = sel.end;
-                say(format(msg.chosen, sel.start, sel.end, nights));
+                say(format(msg.chosen, short(sel.start), short(sel.end), nights));
             } else {
                 sel.start = date;
                 sel.end = null;
