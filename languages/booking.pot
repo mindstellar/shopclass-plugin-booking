@@ -8,7 +8,7 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "Language: \n"
 
-#: views/calendar.php:51
+#: views/calendar.php:53
 msgid "%1$s at %2$s"
 msgstr ""
 
@@ -16,7 +16,7 @@ msgstr ""
 msgid "%1$s to %2$s (%3$d nights)"
 msgstr ""
 
-#: views/calendar.php:46
+#: views/calendar.php:47
 msgid "%1$s to %2$s, %3$d nights"
 msgstr ""
 
@@ -28,7 +28,7 @@ msgstr ""
 msgid "A booking request expired before it was answered."
 msgstr ""
 
-#: views/account.php:196
+#: views/account.php:207
 msgid "Accept"
 msgstr ""
 
@@ -36,16 +36,16 @@ msgstr ""
 msgid "Accept or decline the request"
 msgstr ""
 
-#: views/account.php:152
+#: views/account.php:163
 msgid "Add this address to Google, Apple or Outlook calendar"
 msgstr ""
 
 #: admin/bookings.php:38
-#: views/account.php:169
+#: views/account.php:180
 msgid "All"
 msgstr ""
 
-#: views/account.php:80
+#: views/account.php:91
 msgid "All bookings"
 msgstr ""
 
@@ -57,8 +57,16 @@ msgstr ""
 msgid "Asked"
 msgstr ""
 
-#: views/calendar.php:63
+#: views/calendar.php:89
+msgid "Available"
+msgstr ""
+
+#: views/calendar.php:66
 msgid "Book a time"
+msgstr ""
+
+#: views/calendar.php:90
+msgid "Booked"
 msgstr ""
 
 #: src/Ical.php:52
@@ -72,6 +80,10 @@ msgstr ""
 
 #: index.php:55
 msgid "Booking Calendar needs Shopclass 7.0 and is switched off. Update Shopclass to use it."
+msgstr ""
+
+#: views/calendar.php:117
+msgid "Booking as %1$s, %2$s"
 msgstr ""
 
 #: settings.php:43
@@ -102,7 +114,7 @@ msgstr ""
 msgid "Booking request sent: %s"
 msgstr ""
 
-#: views/account.php:218
+#: views/account.php:229
 msgid "Booking settings"
 msgstr ""
 
@@ -117,13 +129,13 @@ msgstr ""
 #: admin/bookings.php:36
 #: src/Admin.php:27
 #: src/Admin.php:37
-#: src/Plugin.php:159
-#: src/Plugin.php:276
-#: views/account.php:87
+#: src/Plugin.php:162
+#: src/Plugin.php:290
+#: views/account.php:98
 msgid "Bookings"
 msgstr ""
 
-#: views/calendar.php:26
+#: views/calendar.php:27
 msgid "Bookings are off for this listing."
 msgstr ""
 
@@ -139,7 +151,7 @@ msgstr ""
 msgid "Calendar address %1$d: %2$s"
 msgstr ""
 
-#: views/account.php:150
+#: views/account.php:161
 msgid "Calendar feed"
 msgstr ""
 
@@ -147,15 +159,15 @@ msgstr ""
 msgid "Calendars read: %1$d. Dates closed: %2$d."
 msgstr ""
 
-#: views/account.php:137
+#: views/account.php:148
 msgid "Calendars to import"
 msgstr ""
 
-#: views/account.php:232
+#: views/account.php:243
 msgid "Cancel"
 msgstr ""
 
-#: views/account.php:200
+#: views/account.php:211
 msgid "Cancel booking"
 msgstr ""
 
@@ -176,15 +188,15 @@ msgstr ""
 msgid "Categories"
 msgstr ""
 
-#: views/calendar.php:63
+#: views/calendar.php:66
 msgid "Check availability"
 msgstr ""
 
-#: views/calendar.php:87
+#: views/calendar.php:102
 msgid "Check-in"
 msgstr ""
 
-#: views/calendar.php:90
+#: views/calendar.php:105
 msgid "Check-out"
 msgstr ""
 
@@ -192,7 +204,11 @@ msgstr ""
 msgid "Checked every hour by cron. A request also expires once its start has passed."
 msgstr ""
 
-#: views/account.php:129
+#: views/calendar.php:91
+msgid "Closed"
+msgstr ""
+
+#: views/account.php:140
 msgid "Closed dates"
 msgstr ""
 
@@ -200,7 +216,7 @@ msgstr ""
 msgid "Confirm my request"
 msgstr ""
 
-#: views/account.php:91
+#: views/account.php:102
 msgid "Confirm requests at once, without asking me"
 msgstr ""
 
@@ -213,7 +229,7 @@ msgid "Confirm your booking request: %s"
 msgstr ""
 
 #: src/Status.php:103
-#: views/account.php:169
+#: views/account.php:180
 msgid "Confirmed"
 msgstr ""
 
@@ -229,15 +245,15 @@ msgstr ""
 msgid "Counts requests from the site and the API. 0 means no limit."
 msgstr ""
 
-#: views/calendar.php:94
+#: views/calendar.php:109
 msgid "Date and time"
 msgstr ""
 
-#: views/account.php:131
+#: views/account.php:142
 msgid "Dates nobody can book"
 msgstr ""
 
-#: views/account.php:198
+#: views/account.php:209
 msgid "Decline"
 msgstr ""
 
@@ -261,7 +277,7 @@ msgstr ""
 msgid "Deleted user"
 msgstr ""
 
-#: views/calendar.php:104
+#: views/calendar.php:127
 msgid "E-mail"
 msgstr ""
 
@@ -285,7 +301,7 @@ msgstr ""
 msgid "Every booking on the site. Sellers accept or decline requests from their account; requests nobody answers expire on their own."
 msgstr ""
 
-#: src/Plugin.php:223
+#: src/Plugin.php:226
 msgid "Expire unanswered booking requests"
 msgstr ""
 
@@ -293,15 +309,15 @@ msgstr ""
 msgid "Expired"
 msgstr ""
 
-#: views/account.php:182
+#: views/account.php:193
 msgid "Filter requests"
 msgstr ""
 
-#: views/account.php:116
+#: views/account.php:127
 msgid "For each day, the hours you take bookings, such as 09:00-12:00, 13:00-17:00. Leave a day empty to close it."
 msgstr ""
 
-#: views/account.php:78
+#: views/account.php:89
 msgid "Friday"
 msgstr ""
 
@@ -325,19 +341,19 @@ msgstr ""
 msgid "ID"
 msgstr ""
 
-#: src/Plugin.php:224
+#: src/Plugin.php:227
 msgid "Import sellers' other calendars"
 msgstr ""
 
-#: views/account.php:154
+#: views/account.php:165
 msgid "Keep it private: anyone with it sees your bookings."
 msgstr ""
 
-#: views/account.php:141
+#: views/account.php:152
 msgid "Last checked %1$s: %2$s"
 msgstr ""
 
-#: views/account.php:112
+#: views/account.php:123
 msgid "Length of one booking, in minutes"
 msgstr ""
 
@@ -361,31 +377,31 @@ msgstr ""
 msgid "Listing"
 msgstr ""
 
-#: src/Plugin.php:225
+#: src/Plugin.php:228
 msgid "Listing %d"
 msgstr ""
 
-#: views/account.php:157
+#: views/account.php:168
 msgid "Make a new address and stop the old one"
 msgstr ""
 
-#: views/calendar.php:126
+#: views/calendar.php:147
 msgid "Manage bookings for this listing"
 msgstr ""
 
-#: views/calendar.php:114
+#: views/calendar.php:133
 msgid "Message to the seller (optional)"
 msgstr ""
 
-#: views/account.php:103
+#: views/account.php:114
 msgid "Minimum nights"
 msgstr ""
 
-#: views/calendar.php:68
+#: views/calendar.php:71
 msgid "Minimum stay: %d nights."
 msgstr ""
 
-#: views/account.php:78
+#: views/account.php:89
 msgid "Monday"
 msgstr ""
 
@@ -397,7 +413,7 @@ msgstr ""
 msgid "New booking request: %s"
 msgstr ""
 
-#: views/calendar.php:36
+#: views/calendar.php:37
 msgid "Next month"
 msgstr ""
 
@@ -413,31 +429,35 @@ msgstr ""
 msgid "No bookings"
 msgstr ""
 
-#: views/calendar.php:50
+#: views/calendar.php:52
 msgid "No free times on this day."
 msgstr ""
 
-#: views/account.php:189
+#: views/account.php:200
 msgid "No requests here."
 msgstr ""
 
-#: views/account.php:210
+#: views/account.php:221
 msgid "None of your listings is in a category that takes bookings."
 msgstr ""
 
-#: views/account.php:143
+#: views/account.php:154
 msgid "Not checked yet. This takes a few minutes."
 msgstr ""
 
-#: views/calendar.php:45
+#: views/calendar.php:48
+msgid "Now pick a time."
+msgstr ""
+
+#: views/calendar.php:46
 msgid "Now pick your check-out date."
 msgstr ""
 
-#: views/account.php:217
+#: views/account.php:228
 msgid "Off"
 msgstr ""
 
-#: views/account.php:133
+#: views/account.php:144
 msgid "One per line: a date like 2026-12-24, or a range like 2026-12-24..2026-12-31."
 msgstr ""
 
@@ -445,7 +465,7 @@ msgstr ""
 msgid "Only the first %d events of a calendar are read."
 msgstr ""
 
-#: views/account.php:110
+#: views/account.php:121
 msgid "Opening hours"
 msgstr ""
 
@@ -453,11 +473,11 @@ msgstr ""
 msgid "Pages"
 msgstr ""
 
-#: views/account.php:139
+#: views/account.php:150
 msgid "Paste the calendar address (.ics) from Airbnb, Booking.com, Google Calendar and so on, one per line, up to 3. Dates booked there are closed here. Checked every hour."
 msgstr ""
 
-#: views/calendar.php:111
+#: views/calendar.php:130
 msgid "Phone (optional)"
 msgstr ""
 
@@ -469,7 +489,7 @@ msgstr ""
 msgid "Pick a check-in date and a later check-out date."
 msgstr ""
 
-#: views/calendar.php:48
+#: views/calendar.php:50
 msgid "Pick a day to see its times."
 msgstr ""
 
@@ -477,7 +497,7 @@ msgstr ""
 msgid "Pick one of the times shown on the calendar."
 msgstr ""
 
-#: views/calendar.php:44
+#: views/calendar.php:45
 msgid "Pick your check-in date."
 msgstr ""
 
@@ -497,15 +517,15 @@ msgstr ""
 msgid "Please sign in to send a booking request."
 msgstr ""
 
-#: views/calendar.php:35
+#: views/calendar.php:36
 msgid "Previous month"
 msgstr ""
 
-#: views/account.php:93
+#: views/account.php:104
 msgid "Price note"
 msgstr ""
 
-#: views/account.php:181
+#: views/account.php:192
 msgid "Requests for your listings"
 msgstr ""
 
@@ -513,11 +533,11 @@ msgstr ""
 msgid "Requests per hour from one account"
 msgstr ""
 
-#: views/account.php:78
+#: views/account.php:89
 msgid "Saturday"
 msgstr ""
 
-#: views/account.php:160
+#: views/account.php:171
 msgid "Save"
 msgstr ""
 
@@ -537,11 +557,11 @@ msgstr ""
 msgid "Sellers switch bookings on per listing under My account → Bookings, where they also set weekly hours, closed dates and auto-confirm."
 msgstr ""
 
-#: src/Plugin.php:220
+#: src/Plugin.php:223
 msgid "Send a booking e-mail"
 msgstr ""
 
-#: views/calendar.php:120
+#: views/calendar.php:136
 msgid "Send booking request"
 msgstr ""
 
@@ -554,11 +574,15 @@ msgstr ""
 msgid "Settings"
 msgstr ""
 
-#: views/account.php:96
+#: views/account.php:107
 msgid "Shown above the calendar, such as \"80 a night, cleaning 30\"."
 msgstr ""
 
-#: views/calendar.php:122
+#: views/calendar.php:141
+msgid "Sign in to book"
+msgstr ""
+
+#: views/calendar.php:142
 msgid "Sign in to send a booking request."
 msgstr ""
 
@@ -574,19 +598,19 @@ msgstr ""
 msgid "Status: %s"
 msgstr ""
 
-#: views/account.php:101
+#: views/account.php:112
 msgid "Stays"
 msgstr ""
 
-#: views/account.php:78
+#: views/account.php:89
 msgid "Sunday"
 msgstr ""
 
-#: views/account.php:89
+#: views/account.php:100
 msgid "Take bookings for this listing"
 msgstr ""
 
-#: views/account.php:217
+#: views/account.php:228
 msgid "Taking bookings"
 msgstr ""
 
@@ -627,7 +651,7 @@ msgstr ""
 msgid "The buyer cancelled this booking."
 msgstr ""
 
-#: views/calendar.php:52
+#: views/calendar.php:54
 msgid "The calendar could not be loaded. You can still type your dates below."
 msgstr ""
 
@@ -635,8 +659,12 @@ msgstr ""
 msgid "The link works for 24 hours. If you did not ask for this, ignore this e-mail."
 msgstr ""
 
-#: views/calendar.php:47
+#: views/calendar.php:49
 msgid "The minimum stay is %d nights."
+msgstr ""
+
+#: views/calendar.php:139
+msgid "The seller accepts or declines by e-mail. You pay nothing here."
 msgstr ""
 
 #: src/Notifier.php:180
@@ -685,7 +713,7 @@ msgstr ""
 msgid "Those dates were just booked by someone else. Please pick others."
 msgstr ""
 
-#: views/account.php:78
+#: views/account.php:89
 msgid "Thursday"
 msgstr ""
 
@@ -697,7 +725,7 @@ msgstr ""
 msgid "Times are shown in the site's time zone (Settings → General). On a day the clocks change, a slot day has one slot more or less."
 msgstr ""
 
-#: views/calendar.php:49
+#: views/calendar.php:51
 msgid "Times on %s"
 msgstr ""
 
@@ -705,11 +733,11 @@ msgstr ""
 msgid "Too many requests from your address. Please try again later."
 msgstr ""
 
-#: views/account.php:78
+#: views/account.php:89
 msgid "Tuesday"
 msgstr ""
 
-#: views/calendar.php:27
+#: views/calendar.php:28
 msgid "Turn on bookings"
 msgstr ""
 
@@ -750,7 +778,7 @@ msgstr ""
 msgid "Use 5 to 720 minutes."
 msgstr ""
 
-#: views/account.php:169
+#: views/account.php:180
 msgid "Waiting"
 msgstr ""
 
@@ -766,11 +794,11 @@ msgstr ""
 msgid "Waiting requests one buyer may have on one listing"
 msgstr ""
 
-#: views/calendar.php:118
+#: views/calendar.php:138
 msgid "We will e-mail you a link to confirm your request."
 msgstr ""
 
-#: views/account.php:78
+#: views/account.php:89
 msgid "Wednesday"
 msgstr ""
 
@@ -802,12 +830,12 @@ msgstr ""
 msgid "You have a new booking request."
 msgstr ""
 
-#: views/account.php:228
+#: views/account.php:239
 msgid "You have not booked anything yet."
 msgstr ""
 
-#: views/calendar.php:107
-msgid "Your account address. Change it in your account settings."
+#: views/calendar.php:139
+msgid "Your booking is confirmed at once. You pay nothing here."
 msgstr ""
 
 #: src/Notifier.php:173
@@ -822,15 +850,15 @@ msgstr ""
 msgid "Your booking request was sent. The seller will accept or decline it."
 msgstr ""
 
-#: views/account.php:226
+#: views/account.php:237
 msgid "Your bookings"
 msgstr ""
 
-#: views/account.php:208
+#: views/account.php:219
 msgid "Your listings"
 msgstr ""
 
-#: views/calendar.php:101
+#: views/calendar.php:123
 msgid "Your name"
 msgstr ""
 
@@ -838,20 +866,20 @@ msgstr ""
 msgid "Your request was sent. The seller will accept or decline it, and we will e-mail you."
 msgstr ""
 
-#: views/calendar.php:37
+#: views/calendar.php:38
 msgid "available"
 msgstr ""
 
-#: views/calendar.php:38
+#: views/calendar.php:39
 msgid "booked"
 msgstr ""
 
-#: views/calendar.php:39
 #: views/calendar.php:40
+#: views/calendar.php:41
 msgid "closed"
 msgstr ""
 
-#: views/calendar.php:41
+#: views/calendar.php:42
 msgid "fully booked"
 msgstr ""
 
@@ -868,11 +896,11 @@ msgstr ""
 msgid "no answer came, or the file is over 2 MB."
 msgstr ""
 
-#: views/calendar.php:43
+#: views/calendar.php:44
 msgid "not open yet"
 msgstr ""
 
-#: views/calendar.php:42
+#: views/calendar.php:43
 msgid "past"
 msgstr ""
 

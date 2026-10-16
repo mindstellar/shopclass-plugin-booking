@@ -84,6 +84,7 @@ final class ItemPage
             'last'      => $last,
             'signedIn'  => osc_is_web_user_logged_in(),
             'guests'    => $config->guests,
+            'instant'   => !empty($view['listing']['b_auto_confirm']),
         );
         require dirname(__DIR__) . '/views/calendar.php';
     }
