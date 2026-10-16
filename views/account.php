@@ -42,10 +42,21 @@ $button = static function (string $do, int $id, string $label, bool $danger = fa
         . '<button type="submit" class="oe-link-btn' . ($danger ? ' oe-danger-link' : '') . '">' . osc_esc_html($label) . '</button></form>';
 };
 
+/** The listing's first photo, or core's no-photo placeholder. */
+$thumb = static function (int $itemId): string {
+    $photos = osc_images_enabled_at_items() ? osc_get_resources('item', $itemId) : array();
+    if ($photos === array()) {
+        return '<span class="oe-thumb oe-thumb-empty">' . osc_esc_html(__('No photo')) . '</span>';
+    }
+
+    return '<img class="oe-thumb" src="' . osc_esc_html(osc_get_resource_url($photos[0], 'thumbnail')) . '" alt=""'
+        . ' width="88" height="73" loading="lazy" decoding="async">';
+};
+
 /** One booking as a list row. */
-$row = static function (array $b, string $actions) use ($notifier, $d): void {
+$row = static function (array $b, string $actions) use ($notifier, $thumb, $d): void {
     $status = (string) $b['s_status'];
-    echo '<li class="oe-list-item booking-row-item"><div class="oe-list-body">';
+    echo '<li class="oe-list-item booking-row-item">' . $thumb((int) $b['fk_i_item_id']) . '<div class="oe-list-body">';
     echo '<h3><a href="' . osc_esc_html((string) osc_item_url_ns((int) $b['fk_i_item_id'])) . '">' . osc_esc_html((string) $b['s_title']) . '</a></h3>';
     echo '<p class="oe-meta"><span class="oe-badge ' . osc_esc_html(Status::badge($status)) . '">' . osc_esc_html(Status::label($status)) . '</span> '
         . osc_esc_html($notifier->when($b)) . '</p>';
@@ -211,7 +222,7 @@ if ($items !== array() || $requests !== array()) { ?>
     <?php } else { ?>
         <ul class="oe-list">
             <?php foreach ($items as $i) { ?>
-                <li class="oe-list-item"><div class="oe-list-body">
+                <li class="oe-list-item"><?php echo $thumb((int) $i['pk_i_id']); ?><div class="oe-list-body">
                     <h3><a href="<?php echo osc_esc_html((string) osc_item_url_ns((int) $i['pk_i_id'])); ?>"><?php echo osc_esc_html((string) $i['s_title']); ?></a></h3>
                     <p class="oe-meta">
                         <span class="oe-badge <?php echo (int) $i['b_enabled'] === 1 ? 'paid' : 'cancelled'; ?>"><?php echo osc_esc_html((int) $i['b_enabled'] === 1 ? __('Taking bookings', $d) : __('Off', $d)); ?></span>
