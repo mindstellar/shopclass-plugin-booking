@@ -60,7 +60,7 @@ final class Config
         public int $userLimit = 10,
         public int $openPerListing = 3,
         public int $openTotal = 10,
-        public bool $import = true
+        public bool $import = false
     ) {
     }
 

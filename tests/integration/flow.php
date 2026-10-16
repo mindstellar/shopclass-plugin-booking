@@ -180,12 +180,13 @@ pin('core accepts the declaration', null, $threw);
 $fields = \mindstellar\settings\SettingsPageRegistry::getInstance()->fields(Config::PAGE);
 pin('guests may ask until the admin says no', true, (bool) osc_settings_value(Config::PAGE, 'guests'));
 pin('an hour slot by default', 60, (int) osc_settings_value(Config::PAGE, 'slot_minutes'));
+pin('calendar import stays off until the admin turns it on', false, (bool) osc_settings_value(Config::PAGE, 'import'));
 check('a slot under 5 minutes is refused', osc_settings_validate($fields['slot_minutes'], '3') !== null);
 Params::setParam('categories', array('4' => 'nights', '9' => 'slots', '12' => 'weekly', 'x' => 'off', '20' => 'off'));
 pin('the category modes are stored as JSON of known modes', '{"4":"nights","9":"slots","20":"off"}', osc_settings_sanitize($fields['categories']));
 Params::setParam('categories', '');
 $read = Config::get();
-pin('the settings read back with their defaults', array(60, 1, 180, 48, 5), array($read->slotMinutes, $read->minNights, $read->maxDays, $read->expiryHours, $read->guestLimit));
+pin('the settings read back with their defaults', array(60, 1, 180, 48, 5, false), array($read->slotMinutes, $read->minNights, $read->maxDays, $read->expiryHours, $read->guestLimit, $read->import));
 Config::reset();
 
 harness_section('migrations');
@@ -228,7 +229,7 @@ Config::$parents = null;
 $real = new Config(array($rentals => A::NIGHTS, $cottages => A::SLOTS), 60, 2, 60, 48, true, 5, 'Europe/London', 100, 3, 10);
 pin('on core\'s own tree the nearest parent decides', A::SLOTS, $real->modeForCategory($seaside));
 Config::$parents = static fn (int $id): array => $id === $cottages ? array($rentals) : array();
-$config = new Config(array($rentals => A::NIGHTS, $services => A::SLOTS), 60, 2, 60, 48, true, 5, 'Europe/London', 100, 3, 10);
+$config = new Config(array($rentals => A::NIGHTS, $services => A::SLOTS), 60, 2, 60, 48, true, 5, 'Europe/London', 100, 3, 10, true);
 $mails  = array();
 $notifier = new Notifier(
     $config->tz(),
@@ -749,6 +750,26 @@ $status = (string) $store->listing($inn)['s_import_status'];
 check('the seller is told which one failed, by host', strpos($status, 'Could not read calendar 2 (other.example.com)') === 0, $status);
 check('and the address\'s secret is not in it', stripos($status, 'secret') === false);
 $http->down = false;
+
+$admin->query("UPDATE {$p}t_booking_listing SET dt_imported = DATE_SUB(UTC_TIMESTAMP(), INTERVAL 2 HOUR) WHERE fk_i_item_id = {$inn}");
+$killer = new \mindstellar\booking\CalendarSync($store, $config, $http, 'example.test', static function (string $host): array {
+    throw new LogicException('the worker died');
+});
+pin('a run killed part way', 'error: LogicException 0', $reason(static fn () => $killer->run()));
+check('still moves the listing to the back of the line', strtotime((string) $store->listing($inn)['dt_imported'] . ' UTC') > time() - 60);
+pin('so the next run does not pick it again', array(), $store->importDue(time() - \mindstellar\booking\CalendarSync::EVERY, 10));
+
+$admin->query("UPDATE {$p}t_booking_listing SET dt_imported = DATE_SUB(UTC_TIMESTAMP(), INTERVAL 2 HOUR) WHERE fk_i_item_id = {$inn}");
+$ticks = 0;
+$slow  = new \mindstellar\booking\CalendarSync($store, $config, $http, 'example.test', static fn (string $host): array => array('93.184.216.34'), static function () use (&$ticks): int {
+    return time() + (++$ticks > 1 ? \mindstellar\booking\CalendarSync::BUDGET : 0);
+});
+$http->asked = array();
+$late        = $job(array());
+Plugin::importJob($late, $slow);
+pin('a run past its time budget starts no new listing', array(), $http->asked);
+check('and hands the rest to another run', $late->repeatRequest() !== null);
+
 $closedOff = new \mindstellar\booking\CalendarSync($store, new Config(array(), 60, 1, 60, 48, true, 5, 'Europe/London', 10, 3, 10, false), $http, 'example.test', static fn (string $host): array => array('93.184.216.34'));
 $http->asked = array();
 pin('with the import switched off the job does nothing', 0, $closedOff->run($inn));

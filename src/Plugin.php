@@ -233,8 +233,8 @@ final class Plugin
     public static function importJob(Job $job, CalendarSync $sync): void
     {
         $itemId = (int) $job->get('item', 0);
-        $done   = $sync->run($itemId);
-        if ($itemId === 0 && $done >= CalendarSync::BATCH) {
+        $sync->run($itemId);
+        if ($itemId === 0 && $sync->more()) {
             $job->repeat(array());
         }
     }

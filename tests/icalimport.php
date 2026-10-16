@@ -58,4 +58,22 @@ pin('dates are kept inside the window', array('2026-10-02', '2026-10-03'), $pars
 pin('an event wholly outside is dropped', array(), $parse($cal('DTSTART;VALUE=DATE:20251020'), '2026-10-02', '2026-10-03'));
 pin('one calendar closes at most ' . IcalImport::MAX_DATES . ' dates', IcalImport::MAX_DATES, count(IcalImport::parse($cal("DTSTART;VALUE=DATE:20200101\r\nDTEND;VALUE=DATE:20300101"), $london, '2020-01-01', '2029-12-31')));
 
+harness_section('large calendars');
+
+$many  = str_repeat("BEGIN:VEVENT\r\nDTSTART;VALUE=DATE:20200101\r\nDTEND;VALUE=DATE:20300101\r\nEND:VEVENT\r\n", 26000);
+$t0    = microtime(true);
+$cut   = null;
+$dates = IcalImport::parse("BEGIN:VCALENDAR\r\n" . $many . "END:VCALENDAR\r\n", $london, '2026-01-01', '2027-12-30', $cut);
+$spent = microtime(true) - $t0;
+pin('thousands of events over the whole window close each day once', 729, count($dates));
+check('and take well under two seconds', $spent < 2.0, round($spent, 2) . ' s');
+pin('a calendar past ' . IcalImport::MAX_EVENTS . ' events is cut', true, $cut);
+$cut = null;
+IcalImport::parse($cal('DTSTART;VALUE=DATE:20261020'), $london, '2026-01-01', '2027-12-31', $cut);
+pin('a small one is not', false, $cut);
+$late = str_repeat("BEGIN:VEVENT\r\nDTSTART;VALUE=DATE:20261001\r\nEND:VEVENT\r\n", IcalImport::MAX_EVENTS) . "BEGIN:VEVENT\r\nDTSTART;VALUE=DATE:20261101\r\nEND:VEVENT\r\n";
+pin('events after the cap are left out', array('2026-10-01'), $parse("BEGIN:VCALENDAR\r\n" . $late . "END:VCALENDAR"));
+pin('overlapping events are merged', array('2026-10-01', '2026-10-02', '2026-10-03', '2026-10-04'),
+    $parse($cal("DTSTART;VALUE=DATE:20261001\r\nDTEND;VALUE=DATE:20261004", "DTSTART;VALUE=DATE:20261002\r\nDTEND;VALUE=DATE:20261005", "DTSTART;VALUE=DATE:20261002\r\nDTEND;VALUE=DATE:20261003")));
+
 exit(harness_result());

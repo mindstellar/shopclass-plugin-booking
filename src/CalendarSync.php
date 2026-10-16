@@ -38,6 +38,9 @@ final class CalendarSync
     /** Seconds before a listing's calendars are read again. */
     public const EVERY = 3000;
 
+    /** Seconds one run may spend; after that it starts no new listing. */
+    public const BUDGET = 15;
+
     /** Largest calendar file read, in bytes. */
     public const MAX_BYTES = 2 * 1024 * 1024;
 
@@ -47,8 +50,9 @@ final class CalendarSync
         array('169.254.0.0', 16), array('172.16.0.0', 12), array('192.0.0.0', 24), array('192.0.2.0', 24),
         array('192.168.0.0', 16), array('198.18.0.0', 15), array('198.51.100.0', 24), array('203.0.113.0', 24),
         array('224.0.0.0', 4), array('240.0.0.0', 4),
-        array('::', 128), array('::1', 128), array('fc00::', 7), array('fe80::', 10), array('fec0::', 10),
-        array('ff00::', 8), array('2001:db8::', 32), array('100::', 64),
+        array('::', 96), array('::ffff:0:0:0', 96), array('64:ff9b:1::', 48), array('100::', 64),
+        array('2001::', 32), array('2001:db8::', 32), array('2002::', 16),
+        array('fc00::', 7), array('fe80::', 10), array('fec0::', 10), array('ff00::', 8),
     );
 
     private BookingStore $store;
@@ -61,6 +65,9 @@ final class CalendarSync
 
     /** fn(): int */
     private Closure $clock;
+
+    /** Whether the last batch run left listings that are due. */
+    private bool $more = false;
 
     public function __construct(BookingStore $store, Config $config, HttpClient $http, string $ownHost, ?Closure $resolver = null, ?Closure $clock = null)
     {
@@ -204,12 +211,28 @@ final class CalendarSync
 
             return 1;
         }
-        $rows = $this->store->importDue(($this->clock)() - self::EVERY, self::BATCH);
+        $started    = ($this->clock)();
+        $rows       = $this->store->importDue($started - self::EVERY, self::BATCH);
+        $done       = 0;
+        $this->more = count($rows) >= self::BATCH;
         foreach ($rows as $row) {
+            if (($this->clock)() - $started >= self::BUDGET) {
+                $this->more = true;
+                break;
+            }
             $this->listing((int) $row['fk_i_item_id'], (string) $row['s_import']);
+            $done++;
         }
 
-        return count($rows);
+        return $done;
+    }
+
+    /**
+     * Whether the last batch run stopped with listings still due, so another run should follow.
+     */
+    public function more(): bool
+    {
+        return $this->more;
     }
 
     /**
@@ -224,6 +247,9 @@ final class CalendarSync
         [$today, $last] = Availability::window(($this->clock)(), $this->config->maxDays, $tz);
         $urls           = array_values(array_filter(array_map('trim', explode("\n", $import)), static fn (string $u): bool => $u !== ''));
         $dates          = array();
+        $cut            = false;
+        // Stamped first, so a run killed part way puts this listing at the back of the line.
+        $this->store->importTried($itemId, UtcDatetime::format(($this->clock)()));
         foreach (array_slice($urls, 0, self::MAX_CALENDARS) as $n => $url) {
             try {
                 $body = $this->fetch($url);
@@ -237,13 +263,19 @@ final class CalendarSync
 
                 return $this->done($itemId, $status);
             }
-            foreach (IcalImport::parse($body, $tz, $today, $last) as $date) {
+            $long = false;
+            foreach (IcalImport::parse($body, $tz, $today, $last, $long) as $date) {
                 $dates[$date] = true;
             }
+            $cut = $cut || $long;
         }
         $this->store->replaceImported($itemId, array_keys($dates), $today);
+        $status = sprintf(__('Calendars read: %1$d. Dates closed: %2$d.', 'booking'), count($urls), count($dates));
+        if ($cut) {
+            $status .= ' ' . sprintf(__('Only the first %d events of a calendar are read.', 'booking'), IcalImport::MAX_EVENTS);
+        }
 
-        return $this->done($itemId, sprintf(__('Calendars read: %1$d. Dates closed: %2$d.', 'booking'), count($urls), count($dates)));
+        return $this->done($itemId, $status);
     }
 
     /**
@@ -268,11 +300,14 @@ final class CalendarSync
                 throw new RuntimeException(__('it points to a private network.', 'booking'));
             }
         }
+        // The connection goes to the address checked above, not to a fresh DNS answer.
+        $ip = (string) reset($ips);
         try {
             $answer = $this->http->send('GET', $url, array('Accept' => 'text/calendar, */*'), null, array(
                 'connect_timeout' => 5,
-                'timeout'         => 10,
+                'timeout'         => 8,
                 'max_bytes'       => self::MAX_BYTES,
+                'resolve'         => array($host . ':' . (int) (parse_url($url, PHP_URL_PORT) ?: 443) . ':' . (strpos($ip, ':') !== false ? '[' . $ip . ']' : $ip)),
             ));
         } catch (HttpException $e) {
             throw new RuntimeException(__('no answer came, or the file is over 2 MB.', 'booking'));

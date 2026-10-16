@@ -73,13 +73,16 @@ dates here; with the calendar feed above, the two sites stay in step both ways.
   and saving it leaves imported ones alone. Clearing the addresses opens the imported dates.
 - When a calendar cannot be read, the dates imported before stay, and the seller sees why.
 - Only `https://` (or `webcal://`) addresses on the public internet are read: never this
-  site, a private network or a plain-HTTP server. Files over 2 MB are refused.
+  site, a private network or a plain-HTTP server. The connection goes to the address that was
+  checked (on Shopclass versions whose HTTP client can pin it). Files over 2 MB are refused.
 - Addresses can carry a secret, so they are shown only to the seller and never logged.
-- Listings are read 10 at a time, oldest first. A seller who changes the addresses gets a
-  read within minutes.
+- Listings are read 10 at a time, oldest first, and a run stops starting new ones after 15
+  seconds; the rest follow in the next run. A calendar file is read only up to its first 2000
+  events. A seller who changes the addresses gets a read within minutes.
 
-The admin can switch it off under *Defaults and limits*. Off, the box is hidden, nothing is
-read, and imported dates are ignored; they count again when it is switched back on.
+It is off until the admin ticks *Let sellers import other calendars* under *Defaults and
+limits*, so an update never starts reading other sites on its own. Off, the box is hidden,
+nothing is read, and imported dates are ignored; they count again when it is switched back on.
 
 ## Personal data
 

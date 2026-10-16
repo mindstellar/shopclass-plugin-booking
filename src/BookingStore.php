@@ -185,6 +185,14 @@ final class BookingStore
     }
 
     /**
+     * Record that a listing's calendars are being read now, before the work starts.
+     */
+    public function importTried(int $itemId, string $at): void
+    {
+        Db::execute('UPDATE ' . self::t('t_booking_listing') . ' SET dt_imported = ? WHERE fk_i_item_id = ?', array($at, $itemId));
+    }
+
+    /**
      * Record when a listing's calendars were last read, and what came of it.
      */
     public function importDone(int $itemId, string $status, string $at): void

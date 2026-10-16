@@ -27,18 +27,25 @@ final class IcalImport
     /** Most dates one calendar can close. */
     public const MAX_DATES = 1000;
 
+    /** Most events read from one calendar; the rest are left out. */
+    public const MAX_EVENTS = 2000;
+
     /**
      * The local dates the calendar's events touch, between $from and $to (both included).
      *
+     * @param bool|null $cut set to true when the calendar had more than MAX_EVENTS events
+     *
      * @return string[] Y-m-d, sorted
      */
-    public static function parse(string $ics, DateTimeZone $siteTz, string $fromDate, string $toDate): array
+    public static function parse(string $ics, DateTimeZone $siteTz, string $fromDate, string $toDate, ?bool &$cut = null): array
     {
-        $text  = str_replace(array("\r\n", "\r"), "\n", $ics);
-        $text  = (string) preg_replace("/\n[ \t]/", '', $text);
-        $dates = array();
-        $event = null;
-        $depth = 0;
+        $cut    = false;
+        $text   = str_replace(array("\r\n", "\r"), "\n", $ics);
+        $text   = (string) preg_replace("/\n[ \t]/", '', $text);
+        $ranges = array();
+        $events = 0;
+        $event  = null;
+        $depth  = 0;
         foreach (explode("\n", $text) as $line) {
             $prop = self::property($line);
             if ($prop === null) {
@@ -61,11 +68,13 @@ final class IcalImport
                     continue;
                 }
                 if ($upper === 'VEVENT') {
-                    foreach (self::eventDates($event, $siteTz, $fromDate, $toDate) as $date) {
-                        $dates[$date] = true;
-                        if (count($dates) >= self::MAX_DATES) {
-                            break 2;
-                        }
+                    if (++$events > self::MAX_EVENTS) {
+                        $cut = true;
+                        break;
+                    }
+                    $range = self::eventRange($event, $siteTz, $fromDate, $toDate);
+                    if ($range !== null) {
+                        $ranges[] = $range;
                     }
                     $event = null;
                 }
@@ -76,10 +85,41 @@ final class IcalImport
                 $event[$name] = array($params, trim($value));
             }
         }
-        $out = array_keys($dates);
-        sort($out);
+
+        return self::expand($ranges);
+    }
+
+    /**
+     * Day ranges, merged where they overlap, as sorted dates: each day is written once.
+     *
+     * @param array<int,array{0:int,1:int}> $ranges first and last day, as days since 1970-01-01
+     *
+     * @return string[]
+     */
+    private static function expand(array $ranges): array
+    {
+        sort($ranges);
+        $out  = array();
+        $next = PHP_INT_MIN;
+        foreach ($ranges as [$first, $last]) {
+            for ($day = max($first, $next); $day <= $last; $day++) {
+                if (count($out) >= self::MAX_DATES) {
+                    return $out;
+                }
+                $out[] = gmdate('Y-m-d', $day * 86400);
+            }
+            $next = max($next, $last + 1);
+        }
 
         return $out;
+    }
+
+    /**
+     * A Y-m-d date as days since 1970-01-01.
+     */
+    private static function dayNumber(string $date): int
+    {
+        return intdiv((int) gmmktime(0, 0, 0, (int) substr($date, 5, 2), (int) substr($date, 8, 2), (int) substr($date, 0, 4)), 86400);
     }
 
     /**
@@ -105,19 +145,19 @@ final class IcalImport
     /**
      * @param array<string,array{0:array<string,string>,1:string}> $event
      *
-     * @return string[]
+     * @return array{0:int,1:int}|null first and last day inside [$from, $to], as days since 1970-01-01
      */
-    private static function eventDates(array $event, DateTimeZone $tz, string $from, string $to): array
+    private static function eventRange(array $event, DateTimeZone $tz, string $from, string $to): ?array
     {
         if (!isset($event['DTSTART'])
             || strtoupper($event['STATUS'][1] ?? '') === 'CANCELLED'
             || strtoupper($event['TRANSP'][1] ?? '') === 'TRANSPARENT'
         ) {
-            return array();
+            return null;
         }
         $start = self::moment($event['DTSTART'], $tz);
         if ($start === null) {
-            return array();
+            return null;
         }
         $end = isset($event['DTEND']) ? self::moment($event['DTEND'], $tz) : null;
         if ($end === null && isset($event['DURATION'])) {
@@ -138,12 +178,8 @@ final class IcalImport
         }
         $first = max($first, $from);
         $last  = min($last, $to);
-        $out   = array();
-        for ($day = $first; $day <= $last && count($out) < self::MAX_DATES; $day = Availability::addDays($day, 1)) {
-            $out[] = $day;
-        }
 
-        return $out;
+        return $first <= $last ? array(self::dayNumber($first), self::dayNumber($last)) : null;
     }
 
     /**

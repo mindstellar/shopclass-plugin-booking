@@ -79,7 +79,8 @@ check('the refusal names the line', strpos($error("https://a.example.com/1\nhttp
 harness_section('which IP addresses are public');
 
 foreach (array('127.0.0.1', '10.0.0.1', '172.16.5.4', '192.168.0.1', '169.254.1.1', '100.64.0.1', '100.127.255.255', '0.0.0.0', '224.0.0.1', '255.255.255.255',
-    '::1', '::', 'fc00::1', 'fd12:3456::1', 'fe80::1', 'febf::1', 'ff02::1', '::ffff:127.0.0.1', '::ffff:10.0.0.1', '64:ff9b::7f00:1', '2001:db8::1') as $ip) {
+    '::1', '::', 'fc00::1', 'fd12:3456::1', 'fe80::1', 'febf::1', 'ff02::1', '::ffff:127.0.0.1', '::ffff:10.0.0.1', '64:ff9b::7f00:1', '2001:db8::1',
+    '::127.0.0.1', '::808:808', '::ffff:0:7f00:1', '::ffff:0:808:808', '2002:7f00:1::1', '2002:808:808::1', '2001:0:4136:e378::1', '64:ff9b:1::7f00:1') as $ip) {
     pin($ip . ' is not public', false, CalendarSync::publicIp($ip));
 }
 foreach (array('8.8.8.8', '1.1.1.1', '100.128.0.1', '2606:4700:4700::1111', '::ffff:8.8.8.8') as $ip) {
@@ -90,7 +91,9 @@ harness_section('reading a calendar');
 
 $http  = new FakeHttp();
 $dns   = array('cal.example.com' => array('93.184.216.34'), 'inside.example.com' => array('93.184.216.34', '10.0.0.5'), 'v6.example.com' => array('fe80::1'));
-$sync  = new CalendarSync(new BookingStore(), new Config(array()), $http, $own, static fn (string $host): array => $dns[$host] ?? array());
+$sync  = new CalendarSync(new BookingStore(), new Config(array()), $http, $own, static function (string $host) use (&$dns): array {
+    return $dns[$host] ?? array();
+});
 $fail  = static function (string $url) use ($sync): string {
     try {
         $sync->fetch($url);
@@ -102,7 +105,12 @@ $fail  = static function (string $url) use ($sync): string {
 };
 $http->answer = array('status' => 200, 'headers' => array(), 'body' => "BEGIN:VCALENDAR\r\nEND:VCALENDAR\r\n");
 pin('a public host is read', "BEGIN:VCALENDAR\r\nEND:VCALENDAR\r\n", $sync->fetch('webcal://cal.example.com/a.ics?key=secret'));
-check('over https, with a 10 s timeout and a 2 MB cap', strpos($http->asked[0], 'GET https://cal.example.com/a.ics?key=secret {"connect_timeout":5,"timeout":10,"max_bytes":2097152}') === 0, $http->asked[0]);
+check('over https, with an 8 s timeout and a 2 MB cap', strpos($http->asked[0], 'GET https://cal.example.com/a.ics?key=secret {"connect_timeout":5,"timeout":8,"max_bytes":2097152,') === 0, $http->asked[0]);
+check('pinned to the address that was checked', strpos($http->asked[0], '"resolve":["cal.example.com:443:93.184.216.34"]') !== false, $http->asked[0]);
+$dns['six.example.com'] = array('2606:4700:4700::1111');
+$http->asked = array();
+$sync->fetch('https://six.example.com/a.ics');
+check('an IPv6 address is pinned in brackets', strpos($http->asked[0], '"resolve":["six.example.com:443:[2606:4700:4700::1111]"]') !== false, $http->asked[0]);
 $http->asked = array();
 check('a host with any private address is refused', strpos($fail('https://inside.example.com/a.ics'), 'private') !== false);
 check('so is one that points to IPv6 link-local', strpos($fail('https://v6.example.com/a.ics'), 'private') !== false);
