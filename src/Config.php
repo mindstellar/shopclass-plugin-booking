@@ -130,7 +130,8 @@ final class Config
     }
 
     /**
-     * The mode for a category on this site, walking its parents through core's category tree.
+     * The mode for a category on this site, walking its parents through core's category tree
+     * (osc_category_mode()).
      */
     public function modeForCategory(int $categoryId): string
     {
@@ -140,29 +141,12 @@ final class Config
         if (isset($this->categories[$categoryId])) {
             return $this->modeFor($categoryId);
         }
-        $parents = self::$parents !== null ? (self::$parents)($categoryId) : self::coreParents($categoryId);
-
-        return $this->modeFor($categoryId, $parents);
-    }
-
-    /**
-     * A category's parents from core's category tree, nearest first.
-     *
-     * @return int[]
-     */
-    private static function coreParents(int $categoryId): array
-    {
-        $parents = array();
-        // hierarchy() runs from the category up to the root.
-        $chain   = \Category::getInstance()->hierarchy($categoryId);
-        foreach (is_array($chain) ? $chain : array() as $row) {
-            $id = (int) ($row['pk_i_id'] ?? 0);
-            if ($id > 0 && $id !== $categoryId) {
-                $parents[] = $id;
-            }
+        if (self::$parents !== null) {
+            return $this->modeFor($categoryId, (self::$parents)($categoryId));
         }
+        $mode = osc_category_mode($this->categories, $categoryId);
 
-        return $parents;
+        return in_array($mode, array(Availability::NIGHTS, Availability::SLOTS), true) ? $mode : '';
     }
 
     /**
