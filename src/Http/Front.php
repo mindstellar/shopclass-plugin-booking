@@ -86,12 +86,12 @@ final class Front
                 'note'  => Params::getParamString('note'),
             ), $userId, $userId > 0 ? (string) osc_logged_user_email() : '');
             if ($result['outcome'] === BookingService::ASKED) {
-                osc_add_flash_info_message(__('Almost done: we sent you an e-mail. Open the link in it to send your request.', 'booking'));
+                osc_add_flash_info_message(__('Almost done: we sent you an e-mail. Open the link in it to send your request.', 'booking'), Plugin::FLASH);
             } else {
-                self::flashBooked($result['outcome']);
+                self::flashBooked($result['outcome'], Plugin::FLASH);
             }
         } catch (BookingException $e) {
-            osc_add_flash_error_message($e->getMessage());
+            osc_add_flash_error_message($e->getMessage(), Plugin::FLASH);
         }
         osc_redirect_to($back);
     }
@@ -224,11 +224,11 @@ final class Front
     /**
      * Tell the buyer how their booking stands.
      */
-    private static function flashBooked(string $status): void
+    private static function flashBooked(string $status, string $section = 'pubMessages'): void
     {
         osc_add_flash_ok_message($status === Status::CONFIRMED
             ? __('Your booking is confirmed. We sent you an e-mail with the details.', 'booking')
-            : __('Your request was sent. The seller will accept or decline it, and we will e-mail you.', 'booking'));
+            : __('Your request was sent. The seller will accept or decline it, and we will e-mail you.', 'booking'), $section);
     }
 
     /**

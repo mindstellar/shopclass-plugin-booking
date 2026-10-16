@@ -11,10 +11,15 @@
     --booking-pick: #1f6f43;
     --booking-pick-text: #fff;
     --booking-line: rgba(0, 0, 0, .15);
+    --booking-ok: #e7f4ea;
+    --booking-error: #f3e3e3;
     margin: 1.5rem 0;
+    scroll-margin-top: 5rem;
 }
 
 .booking-title { margin: 0 0 .5rem; }
+.booking-message { margin: .25rem 0 .75rem; padding: .625rem .75rem; border-radius: .375rem; background: var(--booking-ok); }
+.booking-message--error { background: var(--booking-error); }
 .booking-note, .booking-hint, .booking-owner { margin: .25rem 0 .75rem; }
 .booking-calendar[hidden], .booking-slots[hidden] { display: none; }
 .booking-calendar { max-width: 24rem; margin-bottom: 1rem; }

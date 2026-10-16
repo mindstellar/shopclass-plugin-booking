@@ -39,6 +39,9 @@ final class Plugin
     public const ROUTE_ACCOUNT      = 'booking-account';
     public const ROUTE_ADMIN        = 'booking-admin';
 
+    /** Flash section for a request's result, shown inside the calendar box the page jumps to. */
+    public const FLASH = 'booking';
+
     /** Hourly job that expires unanswered requests. */
     public const JOB_EXPIRE = 'booking.expire';
 

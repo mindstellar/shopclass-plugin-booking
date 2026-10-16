@@ -11,6 +11,7 @@
 // The calendar and request form on a listing page. $booking comes from ItemPage::render().
 
 use mindstellar\booking\Availability;
+use mindstellar\booking\Plugin;
 
 if (!defined('ABS_PATH')) {
     exit('Direct access is not allowed.');
@@ -61,6 +62,11 @@ $messages = array(
          data-min-nights="<?php echo (int) $booking['minNights']; ?>"
          data-messages="<?php echo osc_esc_html((string) json_encode($messages)); ?>">
     <h2 class="booking-title" id="<?php echo $uid; ?>-title"><?php echo osc_esc_html($nights ? __('Check availability', $d) : __('Book a time', $d)); ?></h2>
+    <?php $flash = osc_get_flash_message(Plugin::FLASH);
+    foreach (is_array($flash) ? $flash : array() as $message) {
+        $type = (string) ($message['type'] ?? ''); ?>
+        <p class="booking-message booking-message--<?php echo osc_esc_html($type); ?>" role="<?php echo $type === 'error' ? 'alert' : 'status'; ?>"><?php echo osc_esc_html((string) ($message['msg'] ?? '')); ?></p>
+    <?php } ?>
     <?php if ($booking['note'] !== '') { ?>
         <p class="booking-note"><?php echo osc_esc_html($booking['note']); ?></p>
     <?php } ?>
