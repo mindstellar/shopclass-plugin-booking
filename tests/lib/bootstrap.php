@@ -30,7 +30,7 @@ if (!defined('OSC_CSRF_SECRET')) {
     define('OSC_CSRF_SECRET', 'test-signing-key-0123456789abcdef');
 }
 
-foreach (array('security/SigningKey', 'security/SignedPayload', 'database/UtcDatetime') as $file) {
+foreach (array('security/SigningKey', 'security/SignedPayload', 'database/UtcDatetime', 'http/HttpClient', 'http/HttpException') as $file) {
     require_once core_path() . '/oc-includes/osclass/classes/' . $file . '.php';
 }
 

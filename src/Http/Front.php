@@ -171,7 +171,7 @@ final class Front
                         'hours'        => $hours,
                         'price_note'   => Params::getParamString('price_note'),
                         'blocked'      => Params::getParamString('blocked'),
-                    ));
+                    ) + (Params::existParam('import') ? array('import' => (string) Params::getParamString('import', false, false, false)) : array()));
                     if (Params::getParamBool('new_feed')) {
                         $service->resetFeed($itemId, $userId);
                     }

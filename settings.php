@@ -28,6 +28,7 @@ return array(
         __('E-mails go out through the job queue: within minutes on auto-cron, at once with a cron line or the job worker.', $d),
         __('Times are shown in the site\'s time zone (Settings → General). On a day the clocks change, a slot day has one slot more or less.', $d),
         __('Each listing has a private calendar address (.ics) that sellers can add to Google, Apple or Outlook calendar. It carries no buyer details.', $d),
+        __('Sellers can import the calendars of the same place on Airbnb, Booking.com or Google Calendar. Their busy dates are closed here, checked every hour by cron.', $d),
         __('Two requests for the same time cannot both be accepted.', $d),
     ))),
     'intro'  => __('Let buyers book listings for dates or time slots. Choose which categories take bookings; sellers turn it on for each listing from their account. Deactivating the plugin keeps every booking; uninstalling it deletes all bookings and these settings.', $d),
@@ -78,6 +79,13 @@ return array(
                     'required' => true,
                     'attrs'    => array('min' => 1, 'max' => 730),
                     'validate' => static fn ($v) => ((int) $v < 1 || (int) $v > 730) ? __('Use 1 to 730 days.', 'booking') : null,
+                ),
+                array(
+                    'type'    => 'checkbox',
+                    'name'    => 'import',
+                    'label'   => __('Let sellers import other calendars', $d),
+                    'help'    => __('Sellers paste calendar addresses (.ics) from Airbnb, Booking.com and so on, and those busy dates are closed here. Switched off, imported dates are ignored until it is on again.', $d),
+                    'default' => true,
                 ),
                 array(
                     'type'     => 'number',

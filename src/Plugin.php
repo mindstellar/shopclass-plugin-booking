@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace mindstellar\booking;
 
+use mindstellar\http\CurlHttpClient;
 use mindstellar\job\Job;
 use mindstellar\migration\MigrationRunner;
 use RuntimeException;
@@ -25,7 +26,7 @@ final class Plugin
     public const VERSION = '0.1.0';
 
     /** Bump with every new migration file. */
-    public const SCHEMA = 1;
+    public const SCHEMA = 2;
 
     /** The plugin's folder, its migrations' scope in core's ledger, and its key-value group. */
     public const FOLDER = 'booking';
@@ -40,6 +41,9 @@ final class Plugin
 
     /** Hourly job that expires unanswered requests. */
     public const JOB_EXPIRE = 'booking.expire';
+
+    /** Job that imports sellers' other calendars: hourly in batches, or one listing after a save. */
+    public const JOB_IMPORT = 'booking.import';
 
     private static ?BookingService $service = null;
 
@@ -113,6 +117,16 @@ final class Plugin
         }
 
         return self::$service;
+    }
+
+    /**
+     * The calendar import on this site's settings, reading over HTTPS.
+     */
+    public static function calendarSync(): CalendarSync
+    {
+        $service = self::service();
+
+        return new CalendarSync($service->store(), $service->config(), new CurlHttpClient(), CalendarSync::siteHost());
     }
 
     /**
@@ -200,18 +214,40 @@ final class Plugin
         osc_job_register_handler(self::JOB_EXPIRE, static function (Job $job): void {
             self::service()->expire();
         });
+        osc_job_register_handler(self::JOB_IMPORT, static function (Job $job): void {
+            self::importJob($job, self::calendarSync());
+        });
         osc_job_describe(Notifier::JOB, __('Send a booking e-mail', 'booking'), static function (array $payload): string {
             return (string) ($payload['subject'] ?? '');
         });
         osc_job_describe(self::JOB_EXPIRE, __('Expire unanswered booking requests', 'booking'));
+        osc_job_describe(self::JOB_IMPORT, __('Import sellers\' other calendars', 'booking'), static function (array $payload): string {
+            return !empty($payload['item']) ? sprintf(__('Listing %d', 'booking'), (int) $payload['item']) : '';
+        });
     }
 
     /**
-     * Queue the expiry check, once.
+     * One run of the import job: the listing in its payload, or the next batch. A full batch
+     * hands the rest to another run, so no run holds the queue for long.
+     */
+    public static function importJob(Job $job, CalendarSync $sync): void
+    {
+        $itemId = (int) $job->get('item', 0);
+        $done   = $sync->run($itemId);
+        if ($itemId === 0 && $done >= CalendarSync::BATCH) {
+            $job->repeat(array());
+        }
+    }
+
+    /**
+     * Queue the expiry check and the calendar import, once each.
      */
     public static function hourly(): void
     {
         osc_job_ensure(self::JOB_EXPIRE);
+        if (Config::get()->import) {
+            osc_job_ensure(self::JOB_IMPORT);
+        }
     }
 
     /**

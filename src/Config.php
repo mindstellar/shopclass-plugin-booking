@@ -46,6 +46,7 @@ final class Config
      * @param int               $userLimit   requests an hour from one account; 0 means no limit
      * @param int               $openPerListing waiting requests one buyer may have on one listing
      * @param int               $openTotal   waiting requests one buyer may have in all
+     * @param bool              $import      whether sellers may import other calendars
      */
     public function __construct(
         public array $categories,
@@ -58,7 +59,8 @@ final class Config
         public string $timezone = 'UTC',
         public int $userLimit = 10,
         public int $openPerListing = 3,
-        public int $openTotal = 10
+        public int $openTotal = 10,
+        public bool $import = true
     ) {
     }
 
@@ -82,7 +84,8 @@ final class Config
             function_exists('osc_timezone') ? (string) osc_timezone() : 'UTC',
             self::clamp((int) self::value('user_limit'), 0, 1000, 10),
             self::clamp((int) self::value('open_per_listing'), 1, 100, 3),
-            self::clamp((int) self::value('open_total'), 1, 1000, 10)
+            self::clamp((int) self::value('open_total'), 1, 1000, 10),
+            (bool) self::value('import')
         );
     }
 

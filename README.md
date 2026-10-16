@@ -60,6 +60,27 @@ Each listing's settings show a private `.ics` address. Add it to Google, Apple o
 calendar to see the bookings there. Events are named by booking number and status; no
 buyer details are in the feed. Ticking *Make a new address* stops the old one.
 
+## Import other calendars
+
+A seller can paste up to 3 calendar addresses (`.ics`) from Airbnb, Booking.com, Google
+Calendar and so on in a listing's settings. Every hour cron reads them and closes the busy
+dates here; with the calendar feed above, the two sites stay in step both ways.
+
+- A busy all-day event closes its nights; the check-out day stays free. A timed event closes
+  each day it touches. Cancelled and free events are skipped. A repeating event counts only
+  its first time.
+- Imported dates are kept apart from the seller's own: the seller's box shows only theirs,
+  and saving it leaves imported ones alone. Clearing the addresses opens the imported dates.
+- When a calendar cannot be read, the dates imported before stay, and the seller sees why.
+- Only `https://` (or `webcal://`) addresses on the public internet are read: never this
+  site, a private network or a plain-HTTP server. Files over 2 MB are refused.
+- Addresses can carry a secret, so they are shown only to the seller and never logged.
+- Listings are read 10 at a time, oldest first. A seller who changes the addresses gets a
+  read within minutes.
+
+The admin can switch it off under *Defaults and limits*. Off, the box is hidden, nothing is
+read, and imported dates are ignored; they count again when it is switched back on.
+
 ## Personal data
 
 A member's data export lists the booking requests they sent, from their account or as a

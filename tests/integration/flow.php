@@ -198,6 +198,13 @@ check('the unique slot key is there', (int) $scalar("SELECT COUNT(*) FROM inform
 check('the calendar query has its index', (int) $scalar("SELECT COUNT(*) FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = '{$p}t_booking' AND INDEX_NAME = 'idx_booking_holds'") === 3);
 $result = \mindstellar\migration\MigrationRunner::forPlugin('booking')->run();
 pin('a second run applies nothing', array(), $result['applied']);
+$column = static fn (string $table, string $name): int => (int) $scalar("SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = '{$p}{$table}' AND COLUMN_NAME = '{$name}'");
+pin('the import columns are there', array(1, 1, 1, 1), array($column('t_booking_listing', 's_import'), $column('t_booking_listing', 'dt_imported'), $column('t_booking_listing', 's_import_status'), $column('t_booking_blocked', 'b_imported')));
+$again = require __DIR__ . '/../../migrations/0002_calendar_import.php';
+pin('the import migration can run again after an interrupted upgrade', 'none', $reason(static fn () => $again->up(\mindstellar\database\Connection::getInstance())));
+$admin->query("ALTER TABLE {$p}t_booking_blocked DROP COLUMN b_imported");
+$again->up(\mindstellar\database\Connection::getInstance());
+pin('and adds only what is missing', 1, $column('t_booking_blocked', 'b_imported'));
 
 harness_section('fixtures');
 
@@ -657,6 +664,117 @@ harness_section('slots on a closed day');
 $spa = $newListing('Spa', $services, array('slot_minutes' => 60, 'hours' => array_fill(1, 7, '09:00-12:00'), 'blocked' => $day(6)));
 pin('a slot on a closed day is refused', 'blocked', $reason(static fn () => $service->prepare($req(array('item' => $spa, 'start' => $day(6) . 'T09:00')), $stranger, 'eve@example.test')));
 pin('the day after is fine', 'none', $reason(static fn () => $service->prepare($req(array('item' => $spa, 'start' => $day(7) . 'T09:00')), $stranger, 'eve@example.test')));
+
+harness_section('imported calendars');
+
+$queued  = array();
+$syncing = new BookingService($config, $store, $notifier, null, null, null, static function (string $type, array $payload, array $options) use (&$queued): void {
+    $queued[] = array($type, $payload, $options['unique_key'] ?? '');
+});
+$inn = $newListing('Inn', $rentals, array('blocked' => $day(3)));
+$store->replaceImported($inn, array($day(3), $day(10), $day(11), $day(-2)), $today);
+pin('imported dates close the listing with the seller\'s own', array($day(3), $day(10), $day(11)), $store->blocked($inn, $today, $day(60)));
+pin('the seller\'s own read alone', array($day(3)), $store->blocked($inn, $today, $day(60), false));
+pin('a past imported date is not added', array(), $store->blocked($inn, $day(-5), $day(-1)));
+pin('a stay over an imported date is refused', 'blocked', $reason(static fn () => $service->prepare($req(array('item' => $inn, 'start' => $day(9), 'end' => $day(12))), $stranger, 'eve@example.test')));
+pin('the calendar shows it closed', A::BLOCKED, $service->month($inn, A::NIGHTS, $store->listing($inn), $day(10))['days'][$day(10)]);
+$must('saving', static fn () => $service->saveListing($inn, $seller, array('enabled' => true, 'min_nights' => 1, 'blocked' => $day(20))));
+pin('saving the seller\'s dates keeps the imported ones', array($day(10), $day(11), $day(20)), $store->blocked($inn, $today, $day(60)));
+pin('and only the seller\'s are in their box', array($day(20)), $store->blocked($inn, $today, $day(60), false));
+$store->replaceImported($inn, array($day(20), $day(12)), $today);
+pin('a new import replaces the old imported dates', array($day(12), $day(20)), $store->blocked($inn, $today, $day(60)));
+pin('and a date the seller closed stays theirs', array($day(20)), $store->blocked($inn, $today, $day(60), false));
+$noImport = new BookingService(new Config(array($rentals => A::NIGHTS, $services => A::SLOTS), 60, 2, 60, 48, true, 5, 'Europe/London', 100, 3, 10, false), $store, $notifier);
+pin('with the import switched off, imported dates are ignored', 'none', $reason(static fn () => $noImport->prepare($req(array('item' => $inn, 'start' => $day(11), 'end' => $day(14))), $stranger, 'eve@example.test')));
+$store->replaceImported($spa, array($day(9)), $today);
+pin('an imported date closes a slot day too', 'blocked', $reason(static fn () => $service->prepare($req(array('item' => $spa, 'start' => $day(9) . 'T09:00')), $stranger, 'eve@example.test')));
+check('the feed lists no imported dates', strpos((string) $service->feed($inn, \mindstellar\booking\Token::ical($inn, (string) $store->listing($inn)['s_ical_salt']), 'example.test'), 'BEGIN:VEVENT') === false);
+
+$settings = static fn (string $import): array => array('enabled' => true, 'min_nights' => 1, 'blocked' => $day(20), 'import' => $import);
+pin('a private address is refused on save', 'input', $reason(static fn () => $syncing->saveListing($inn, $seller, $settings('https://192.168.1.10/cal.ics'))));
+pin('so is plain http', 'input', $reason(static fn () => $syncing->saveListing($inn, $seller, $settings('http://cal.example.com/a.ics'))));
+pin('and nothing was stored', '', (string) $store->listing($inn)['s_import']);
+$must('saving addresses', static fn () => $syncing->saveListing($inn, $seller, $settings("webcal://cal.example.com/a.ics?s=Secret\nhttps://other.example.com/b.ics")));
+pin('they are stored as https, one per line', "https://cal.example.com/a.ics?s=Secret\nhttps://other.example.com/b.ics", (string) $store->listing($inn)['s_import']);
+pin('and one import of the listing is queued', array(array(Plugin::JOB_IMPORT, array('item' => $inn), 'item:' . $inn)), $queued);
+$queued = array();
+$must('saving the same', static fn () => $syncing->saveListing($inn, $seller, $settings("https://cal.example.com/a.ics?s=Secret\nhttps://other.example.com/b.ics")));
+pin('saving the same addresses queues nothing', array(), $queued);
+$must('a change of case', static fn () => $syncing->saveListing($inn, $seller, $settings("https://cal.example.com/a.ics?s=secret&x=1\nhttps://other.example.com/b.ics")));
+pin('a change of case in a secret is a change', 1, count($queued));
+
+$answers = array(
+    'https://cal.example.com/a.ics?s=secret&x=1' => "BEGIN:VCALENDAR\r\nBEGIN:VEVENT\r\nDTSTART;VALUE=DATE:" . str_replace('-', '', $day(30)) . "\r\nDTEND;VALUE=DATE:" . str_replace('-', '', $day(33)) . "\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n",
+    'https://other.example.com/b.ics' => "BEGIN:VCALENDAR\r\nBEGIN:VEVENT\r\nDTSTART:" . str_replace('-', '', $day(40)) . "T090000Z\r\nDTEND:" . str_replace('-', '', $day(40)) . "T100000Z\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n",
+);
+$http = new class ($answers) implements \mindstellar\http\HttpClient {
+    public array $asked = array();
+    public bool $down = false;
+
+    public function __construct(private array $answers)
+    {
+    }
+
+    public function send(string $method, string $url, array $headers = [], ?string $body = null, array $options = []): array
+    {
+        $this->asked[] = $url;
+        if ($this->down && strpos($url, 'other.') !== false) {
+            throw new \mindstellar\http\HttpException('other.example.com could not be reached');
+        }
+
+        return array('status' => isset($this->answers[$url]) ? 200 : 404, 'headers' => array(), 'body' => $this->answers[$url] ?? '');
+    }
+};
+$sync = new \mindstellar\booking\CalendarSync($store, $config, $http, 'example.test', static fn (string $host): array => array('93.184.216.34'));
+$job  = static fn (array $payload): \mindstellar\job\Job => new \mindstellar\job\Job(array('pk_i_id' => 1, 's_type' => Plugin::JOB_IMPORT), $payload);
+$one  = $job(array('item' => $inn));
+Plugin::importJob($one, $sync);
+pin('the job imports the listing it was queued for', array_keys($answers), $http->asked);
+pin('its dates are closed, the seller\'s kept', array($day(20), $day(30), $day(31), $day(32), $day(40)), $store->blocked($inn, $today, $day(60)));
+pin('the seller sees what came of it', 'Calendars read: 2. Dates closed: 4.', (string) $store->listing($inn)['s_import_status']);
+check('and when', (string) $store->listing($inn)['dt_imported'] !== '');
+pin('a one-listing job does not repeat', null, $one->repeatRequest());
+
+$http->asked = array();
+$batch       = $job(array());
+Plugin::importJob($batch, $sync);
+pin('the hourly run skips a listing read in the last hour', array(), $http->asked);
+pin('and asks for no more runs', null, $batch->repeatRequest());
+$admin->query("UPDATE {$p}t_booking_listing SET dt_imported = DATE_SUB(UTC_TIMESTAMP(), INTERVAL 2 HOUR) WHERE fk_i_item_id = {$inn}");
+$http->down = true;
+Plugin::importJob($job(array()), $sync);
+pin('an hour later it reads it again', 2, count($http->asked));
+pin('a calendar that cannot be read leaves the imported dates as they were', array($day(20), $day(30), $day(31), $day(32), $day(40)), $store->blocked($inn, $today, $day(60)));
+$status = (string) $store->listing($inn)['s_import_status'];
+check('the seller is told which one failed, by host', strpos($status, 'Could not read calendar 2 (other.example.com)') === 0, $status);
+check('and the address\'s secret is not in it', stripos($status, 'secret') === false);
+$http->down = false;
+$closedOff = new \mindstellar\booking\CalendarSync($store, new Config(array(), 60, 1, 60, 48, true, 5, 'Europe/London', 10, 3, 10, false), $http, 'example.test', static fn (string $host): array => array('93.184.216.34'));
+$http->asked = array();
+pin('with the import switched off the job does nothing', 0, $closedOff->run($inn));
+pin('and fetches nothing', array(), $http->asked);
+
+$GLOBALS['test_user'] = $seller;
+Params::setParam('item', (string) $inn);
+if (!function_exists('osc_csrf_token_form')) {
+    function osc_csrf_token_form()
+    {
+        return '';
+    }
+}
+ob_start();
+include __DIR__ . '/../../views/account.php';
+$form = (string) ob_get_clean();
+Params::setParam('item', '');
+$GLOBALS['test_user'] = 0;
+preg_match('#<textarea[^>]*name="blocked"[^>]*>(.*?)</textarea>#s', $form, $box);
+pin('the seller\'s box shows only their own dates', $day(20), trim($box[1] ?? ''));
+check('the import box shows their addresses, escaped', strpos($form, 'https://cal.example.com/a.ics?s=secret&amp;x=1') !== false);
+check('with the last result', strpos($form, 'Could not read calendar 2') !== false);
+
+$must('clearing the addresses', static fn () => $syncing->saveListing($inn, $seller, $settings('')));
+pin('clearing the addresses opens the imported dates again', array($day(20)), $store->blocked($inn, $today, $day(60)));
+pin('and clears the result', '', (string) $store->listing($inn)['s_import_status']);
 
 harness_section('routes');
 

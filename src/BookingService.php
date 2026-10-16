@@ -43,7 +43,10 @@ final class BookingService
     /** fn(int $max): bool, true while this visitor's address is under the guest limit; counts one. */
     private Closure $guestGate;
 
-    public function __construct(Config $config, BookingStore $store, Notifier $notifier, ?Closure $clock = null, ?Closure $limiter = null, ?Closure $guestGate = null)
+    /** fn(string $type, array $payload, array $options): void -- puts a job on the queue. */
+    private Closure $enqueue;
+
+    public function __construct(Config $config, BookingStore $store, Notifier $notifier, ?Closure $clock = null, ?Closure $limiter = null, ?Closure $guestGate = null, ?Closure $enqueue = null)
     {
         $this->config   = $config;
         $this->store    = $store;
@@ -57,6 +60,9 @@ final class BookingService
             \mindstellar\security\ActionThrottle::record(self::THROTTLE_GUEST);
 
             return true;
+        };
+        $this->enqueue = $enqueue ?? static function (string $type, array $payload, array $options): void {
+            osc_job_enqueue($type, $payload, $options);
         };
     }
 
@@ -244,7 +250,7 @@ final class BookingService
         [$first, $last] = Availability::window($now, $this->config->maxDays, $tz);
         $from           = Availability::clampMonth($date, $first, $last);
         $to             = Availability::nextMonth($from);
-        $blocked        = $this->store->blocked($itemId, $from, $to);
+        $blocked        = $this->store->blocked($itemId, $from, $to, $this->config->import);
         $holds          = $this->store->holds($itemId, Availability::dayStart($from, $tz), Availability::dayStart($to, $tz));
         $out            = array(
             'mode'  => $mode,
@@ -306,7 +312,7 @@ final class BookingService
             $in      = trim((string) ($input['start'] ?? ''));
             $out     = trim((string) ($input['end'] ?? ''));
             $blocked = Availability::validDate($in) && Availability::validDate($out) && $out > $in
-                ? $this->store->blocked((int) $ctx['item']['pk_i_id'], $in, Availability::addDays($out, -1))
+                ? $this->store->blocked((int) $ctx['item']['pk_i_id'], $in, Availability::addDays($out, -1), $this->config->import)
                 : array();
             $why = Availability::checkNights($in, $out, (int) $listing['i_min_nights'], array(), $blocked, $tz, $now, $this->config->maxDays);
             if ($why !== null) {
@@ -321,7 +327,7 @@ final class BookingService
                 throw new BookingException('slot');
             }
             $day     = Availability::localDate($start, $tz);
-            $blocked = $this->store->blocked((int) $ctx['item']['pk_i_id'], $day, $day);
+            $blocked = $this->store->blocked((int) $ctx['item']['pk_i_id'], $day, $day, $this->config->import);
             $why     = Availability::checkSlot($start, Availability::parseHours((string) $listing['s_hours']), $minutes, array(), $blocked, $tz, $now, $this->config->maxDays);
             if ($why !== null) {
                 throw new BookingException($why);
@@ -484,9 +490,10 @@ final class BookingService
     /**
      * Save a seller's settings for one of their listings.
      *
-     * @param array<string,mixed> $input enabled, auto_confirm, min_nights, slot_minutes, hours (weekday => text), price_note, blocked
+     * @param array<string,mixed> $input enabled, auto_confirm, min_nights, slot_minutes, hours (weekday => text), price_note, blocked,
+     *                                   import (calendar addresses, one per line)
      *
-     * @throws BookingException 'owner' or 'off'
+     * @throws BookingException 'owner', 'off', or 'input' for a calendar address that cannot be imported
      */
     public function saveListing(int $itemId, int $userId, array $input): void
     {
@@ -497,6 +504,9 @@ final class BookingService
         if ($this->config->modeForCategory((int) $item['fk_i_category_id']) === '') {
             throw new BookingException('off');
         }
+        $import = $this->config->import && array_key_exists('import', $input)
+            ? CalendarSync::parseList((string) $input['import'], CalendarSync::siteHost())
+            : null;
         $hours = array();
         foreach ((array) ($input['hours'] ?? array()) as $day => $text) {
             $hours[(int) $day] = (string) $text;
@@ -511,6 +521,13 @@ final class BookingService
         ));
         [$today, $last] = Availability::window(($this->clock)(), $this->config->maxDays, $this->config->tz());
         $this->store->setBlocked($itemId, Availability::parseBlocked((string) ($input['blocked'] ?? ''), $today, $last), $today);
+        if ($import !== null && $this->store->setImport($itemId, implode("\n", $import))) {
+            if ($import === array()) {
+                $this->store->replaceImported($itemId, array(), $today);
+            } else {
+                ($this->enqueue)(Plugin::JOB_IMPORT, array('item' => $itemId), array('unique_key' => 'item:' . $itemId));
+            }
+        }
     }
 
     /**

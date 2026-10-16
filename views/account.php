@@ -16,6 +16,7 @@ use mindstellar\booking\Notifier;
 use mindstellar\booking\Plugin;
 use mindstellar\booking\Status;
 use mindstellar\booking\Token;
+use mindstellar\database\UtcDatetime;
 
 if (!defined('ABS_PATH')) {
     exit('Direct access is not allowed.');
@@ -67,7 +68,10 @@ if ($item !== null && (int) $item['fk_i_user_id'] === $userId && $mode !== '') {
     // One listing's settings.
     $listing = $store->listing($itemId);
     $hours   = Availability::parseHours((string) ($listing['s_hours'] ?? ''));
-    $blocked = Availability::formatBlocked($store->blocked($itemId, $today, Availability::addDays($today, 800)));
+    $blocked = Availability::formatBlocked($store->blocked($itemId, $today, Availability::addDays($today, 800), false));
+    $synced  = (string) ($listing['dt_imported'] ?? '') !== ''
+        ? (new DateTimeImmutable('@' . (int) UtcDatetime::parse((string) $listing['dt_imported'])))->setTimezone($config->tz())->format('Y-m-d H:i')
+        : '';
     $feed    = $listing !== null && (string) $listing['s_ical_salt'] !== ''
         ? Plugin::url(Plugin::ROUTE_ICAL, array('item' => $itemId, 'key' => Token::ical($itemId, (string) $listing['s_ical_salt'])))
         : '';
@@ -128,6 +132,18 @@ if ($item !== null && (int) $item['fk_i_user_id'] === $userId && $mode !== '') {
                 <textarea class="oe-input" id="booking-blocked" name="blocked" rows="4" aria-describedby="booking-blocked-hint"><?php echo osc_esc_html($blocked); ?></textarea>
                 <p class="oe-hint" id="booking-blocked-hint"><?php echo osc_esc_html(__('One per line: a date like 2026-12-24, or a range like 2026-12-24..2026-12-31.', $d)); ?></p>
             </div>
+            <?php if ($config->import) { ?>
+                <div class="oe-field">
+                    <label class="oe-label" for="booking-import"><?php echo osc_esc_html(__('Calendars to import', $d)); ?></label>
+                    <textarea class="oe-input" id="booking-import" name="import" rows="3" spellcheck="false" autocomplete="off" aria-describedby="booking-import-hint"><?php echo osc_esc_html((string) ($listing['s_import'] ?? '')); ?></textarea>
+                    <p class="oe-hint" id="booking-import-hint"><?php echo osc_esc_html(__('Paste the calendar address (.ics) from Airbnb, Booking.com, Google Calendar and so on, one per line, up to 3. Dates booked there are closed here. Checked every hour.', $d)); ?></p>
+                    <?php if ((string) ($listing['s_import_status'] ?? '') !== '') { ?>
+                        <p class="oe-hint"><?php echo osc_esc_html(sprintf(__('Last checked %1$s: %2$s', $d), $synced, (string) $listing['s_import_status'])); ?></p>
+                    <?php } elseif ((string) ($listing['s_import'] ?? '') !== '') { ?>
+                        <p class="oe-hint"><?php echo osc_esc_html(__('Not checked yet. This takes a few minutes.', $d)); ?></p>
+                    <?php } ?>
+                </div>
+            <?php } ?>
         </fieldset>
         <?php if ($feed !== '') { ?>
             <fieldset class="oe-group">

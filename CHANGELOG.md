@@ -13,6 +13,7 @@
 - Unanswered requests expire after a set number of hours.
 - No double bookings: overlap check under a row lock, and a unique key on each live booking's start.
 - Private iCal feed per listing, with no buyer details.
+- Sellers import other calendars (Airbnb, Booking.com, Google) by address; their busy dates are closed every hour.
 - Bookings are in the member's data export, and are made anonymous when the account is deleted.
 - Admin list of all bookings by status.
 - REST API: read a listing's calendar, send a booking request.

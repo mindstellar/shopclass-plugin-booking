@@ -104,14 +104,16 @@ final class BookingStore
     }
 
     /**
-     * Dates the seller closed between $from and $to, both included.
+     * Closed dates between $from and $to, both included: the seller's own, and with $imported
+     * also those from the calendars they import.
      *
      * @return string[]
      */
-    public function blocked(int $itemId, string $from, string $to): array
+    public function blocked(int $itemId, string $from, string $to, bool $imported = true): array
     {
         $rows = Db::select(
-            'SELECT d_date FROM ' . self::t('t_booking_blocked') . ' WHERE fk_i_item_id = ? AND d_date BETWEEN ? AND ? ORDER BY d_date',
+            'SELECT d_date FROM ' . self::t('t_booking_blocked') . ' WHERE fk_i_item_id = ? AND d_date BETWEEN ? AND ?'
+            . ($imported ? '' : ' AND b_imported = 0') . ' ORDER BY d_date',
             array($itemId, $from, $to)
         );
 
@@ -119,29 +121,102 @@ final class BookingStore
     }
 
     /**
-     * Replace the closed dates from $today on. Past ones stay as they were.
+     * Replace the seller's own closed dates from $today on. Past ones stay as they were, and so
+     * do imported ones; a date in both counts as the seller's.
      *
      * @param string[] $dates
      */
     public function setBlocked(int $itemId, array $dates, string $today): void
     {
         Db::transaction(function () use ($itemId, $dates, $today): void {
-            Db::execute('DELETE FROM ' . self::t('t_booking_blocked') . ' WHERE fk_i_item_id = ? AND d_date >= ?', array($itemId, $today));
-            $dates = array_values(array_filter($dates, static fn (string $d): bool => $d >= $today));
-            foreach (array_chunk($dates, 200) as $chunk) {
-                $params = array();
-                foreach ($chunk as $date) {
-                    $params[] = $itemId;
-                    $params[] = $date;
-                }
-                Db::execute(
-                    'INSERT IGNORE INTO ' . self::t('t_booking_blocked') . ' (fk_i_item_id, d_date) VALUES '
-                    . implode(', ', array_fill(0, count($chunk), '(?, ?)')),
-                    $params
-                );
-            }
+            Db::execute('DELETE FROM ' . self::t('t_booking_blocked') . ' WHERE fk_i_item_id = ? AND d_date >= ? AND b_imported = 0', array($itemId, $today));
+            $this->insertDates($itemId, $dates, $today, false);
         });
         $this->bump($itemId);
+    }
+
+    /**
+     * Replace the imported closed dates from $today on. A date the seller closed stays theirs.
+     *
+     * @param string[] $dates
+     */
+    public function replaceImported(int $itemId, array $dates, string $today): void
+    {
+        Db::transaction(function () use ($itemId, $dates, $today): void {
+            Db::execute('DELETE FROM ' . self::t('t_booking_blocked') . ' WHERE fk_i_item_id = ? AND d_date >= ? AND b_imported = 1', array($itemId, $today));
+            $this->insertDates($itemId, $dates, $today, true);
+        });
+        $this->bump($itemId);
+    }
+
+    /**
+     * Save the calendar addresses a listing imports. A change clears the last result, so the
+     * listing is imported first in the next run.
+     *
+     * @return bool whether they changed
+     */
+    public function setImport(int $itemId, string $import): bool
+    {
+        // Compared here, not in SQL: the column's collation ignores case, and a secret in an address does not.
+        $before = Db::scalar('SELECT s_import FROM ' . self::t('t_booking_listing') . ' WHERE fk_i_item_id = ?', array($itemId));
+        if ($before === null || $before === false || (string) $before === $import) {
+            return false;
+        }
+        Db::execute(
+            'UPDATE ' . self::t('t_booking_listing') . ' SET s_import = ?, s_import_status = \'\', dt_imported = NULL WHERE fk_i_item_id = ?',
+            array($import, $itemId)
+        );
+
+        return true;
+    }
+
+    /**
+     * Listings taking bookings whose calendars were not imported since $before, oldest first.
+     *
+     * @return array<int,array<string,mixed>> fk_i_item_id and s_import
+     */
+    public function importDue(int $before, int $limit): array
+    {
+        return Db::select(
+            'SELECT fk_i_item_id, s_import FROM ' . self::t('t_booking_listing')
+            . ' WHERE b_enabled = 1 AND s_import <> \'\' AND (dt_imported IS NULL OR dt_imported < ?) ORDER BY dt_imported, fk_i_item_id LIMIT ?',
+            array(UtcDatetime::format($before), $limit)
+        );
+    }
+
+    /**
+     * Record when a listing's calendars were last read, and what came of it.
+     */
+    public function importDone(int $itemId, string $status, string $at): void
+    {
+        Db::execute(
+            'UPDATE ' . self::t('t_booking_listing') . ' SET s_import_status = ?, dt_imported = ? WHERE fk_i_item_id = ?',
+            array($status, $at, $itemId)
+        );
+    }
+
+    /**
+     * Add closed dates from $today on. An imported one never takes the place of the seller's own.
+     *
+     * @param string[] $dates
+     */
+    private function insertDates(int $itemId, array $dates, string $today, bool $imported): void
+    {
+        $dates = array_values(array_filter($dates, static fn (string $d): bool => $d >= $today));
+        foreach (array_chunk($dates, 200) as $chunk) {
+            $params = array();
+            foreach ($chunk as $date) {
+                $params[] = $itemId;
+                $params[] = $date;
+            }
+            $values = implode(', ', array_fill(0, count($chunk), '(?, ?, ' . ($imported ? 1 : 0) . ')'));
+            Db::execute(
+                $imported
+                    ? 'INSERT IGNORE INTO ' . self::t('t_booking_blocked') . ' (fk_i_item_id, d_date, b_imported) VALUES ' . $values
+                    : 'INSERT INTO ' . self::t('t_booking_blocked') . ' (fk_i_item_id, d_date, b_imported) VALUES ' . $values . ' ON DUPLICATE KEY UPDATE b_imported = 0',
+                $params
+            );
+        }
     }
 
     /**
