@@ -35,14 +35,13 @@ $link     = static fn (string $s, int $p = 1): string => osc_route_admin_url(Plu
 
 osc_admin_page_head(__('Bookings', $d));
 
-echo '<ul class="nav nav-pills mb-3">';
-echo '<li class="nav-item"><a class="nav-link' . ($status === '' ? ' active" aria-current="page' : '') . '" href="' . osc_esc_html($link('')) . '">'
-    . osc_esc_html(sprintf(__('All (%d)', $d), array_sum($counts))) . '</a></li>';
+$tabs = array(array('label' => __('All', $d), 'url' => $link(''), 'active' => $status === '', 'count' => array_sum($counts)));
 foreach (Status::all() as $s) {
-    echo '<li class="nav-item"><a class="nav-link' . ($status === $s ? ' active" aria-current="page' : '') . '" href="' . osc_esc_html($link($s)) . '">'
-        . osc_esc_html(Status::label($s) . ' (' . $counts[$s] . ')') . '</a></li>';
+    $tabs[] = array('label' => Status::label($s), 'url' => $link($s), 'active' => $status === $s, 'count' => $counts[$s]);
 }
-echo '</ul>';
+echo '<div class="mb-3">';
+osc_admin_link_group($tabs);
+echo '</div>';
 
 echo '<div class="table-contains-actions osc-table-stack"><table class="table"><thead><tr>';
 foreach (array(__('Status', $d), __('ID', $d), __('Listing', $d), __('When', $d), __('Buyer', $d), __('Asked', $d)) as $title) {
