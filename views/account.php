@@ -216,7 +216,7 @@ if ($items !== array() || $requests !== array()) { ?>
         </ul>
     <?php } ?>
 
-    <h2><?php echo osc_esc_html(__('Your listings', $d)); ?></h2>
+    <h2 class="booking-section-title"><?php echo osc_esc_html(__('Your listings', $d)); ?></h2>
     <?php if ($items === array()) { ?>
         <p class="oe-empty"><?php echo osc_esc_html(__('None of your listings is in a category that takes bookings.', $d)); ?></p>
     <?php } else { ?>
@@ -234,7 +234,7 @@ if ($items !== array() || $requests !== array()) { ?>
     <?php } ?>
 <?php } ?>
 
-<h2><?php echo osc_esc_html(__('Your bookings', $d)); ?></h2>
+<h2 class="booking-section-title"><?php echo osc_esc_html(__('Your bookings', $d)); ?></h2>
 <?php if ($mine === array()) { ?>
     <p class="oe-empty"><?php echo osc_esc_html(__('You have not booked anything yet.', $d)); ?></p>
 <?php } else { ?>

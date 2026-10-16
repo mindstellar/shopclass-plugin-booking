@@ -79,6 +79,7 @@ osc_add_hook(Plugin::ROUTE_ICAL, array(Front::class, 'ical'));
 osc_add_hook('show_item', array(ItemPage::class, 'prepare'));
 osc_add_hook('item_detail', array(ItemPage::class, 'render'));
 osc_add_filter('user_menu_filter', array(Plugin::class, 'menu'));
+osc_add_hook('init', array(Plugin::class, 'accountStyle'));
 osc_add_hook('after_delete_item', array(Plugin::class, 'itemDeleted'));
 
 // A member's bookings go into their data export, and their details leave with the account.

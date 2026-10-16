@@ -264,6 +264,17 @@ final class Plugin
     }
 
     /**
+     * The account nav icon and page spacing. Only signed-in members see the account nav, and their pages are never cached.
+     */
+    public static function accountStyle(): void
+    {
+        if (osc_is_web_user_logged_in()) {
+            osc_register_style('booking-account', self::asset('assets/account.css'));
+            osc_enqueue_style('booking-account');
+        }
+    }
+
+    /**
      * The account nav entry.
      *
      * @param mixed $items
