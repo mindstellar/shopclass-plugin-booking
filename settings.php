@@ -21,6 +21,15 @@ $d = 'booking';
 return array(
     'title'  => __('Booking Calendar', $d),
     'menu'   => 'plugins',
+    // Core wraps the help in one <p>, so each fact closes it and opens the next.
+    'help'   => implode('</p><p>', array_map('osc_esc_html', array(
+        __('Sellers switch bookings on per listing under My account → Bookings, where they also set weekly hours, closed dates and auto-confirm.', $d),
+        __('Every booking is listed under Plugins → Bookings.', $d),
+        __('E-mails go out through the job queue: within minutes on auto-cron, at once with a cron line or the job worker.', $d),
+        __('Times are shown in the site\'s time zone (Settings → General). On a day the clocks change, a slot day has one slot more or less.', $d),
+        __('Each listing has a private calendar address (.ics) that sellers can add to Google, Apple or Outlook calendar. It carries no buyer details.', $d),
+        __('Two requests for the same time cannot both be accepted.', $d),
+    ))),
     'intro'  => __('Let buyers book listings for dates or time slots. Choose which categories take bookings; sellers turn it on for each listing from their account. Deactivating the plugin keeps every booking; uninstalling it deletes all bookings and these settings.', $d),
     'groups' => array(
         array(
