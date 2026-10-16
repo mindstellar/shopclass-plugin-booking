@@ -64,15 +64,11 @@ msgstr ""
 msgid "Book a time"
 msgstr ""
 
-#: settings.php:48
-msgid "Booking"
-msgstr ""
-
 #: src/Ical.php:52
 msgid "Booking #%1$d (%2$s)"
 msgstr ""
 
-#: settings.php:69
+#: settings.php:127
 #: src/Admin.php:26
 msgid "Booking Calendar"
 msgstr ""
@@ -81,7 +77,7 @@ msgstr ""
 msgid "Booking Calendar needs Shopclass 7.0 and is switched off. Update Shopclass to use it."
 msgstr ""
 
-#: settings.php:79
+#: settings.php:137
 msgid "Booking by category"
 msgstr ""
 
@@ -134,6 +130,14 @@ msgstr ""
 msgid "Bookings are off for this listing."
 msgstr ""
 
+#: settings.php:78
+msgid "Bookings are off in every category."
+msgstr ""
+
+#: settings.php:79
+msgid "Bookings are on in: %s."
+msgstr ""
+
 #: admin/bookings.php:53
 msgid "Bookings show here once buyers send requests."
 msgstr ""
@@ -167,12 +171,8 @@ msgstr ""
 msgid "Cancelled"
 msgstr ""
 
-#: settings.php:74
+#: settings.php:132
 msgid "Categories"
-msgstr ""
-
-#: settings.php:47
-msgid "Category"
 msgstr ""
 
 #: views/calendar.php:63
@@ -187,7 +187,7 @@ msgstr ""
 msgid "Check-out"
 msgstr ""
 
-#: settings.php:137
+#: settings.php:195
 msgid "Checked every hour by cron. A request also expires once its start has passed."
 msgstr ""
 
@@ -216,11 +216,11 @@ msgstr ""
 msgid "Confirmed"
 msgstr ""
 
-#: settings.php:191
+#: settings.php:249
 msgid "Counted per IP address, or per /64 network for IPv6. 0 means no limit."
 msgstr ""
 
-#: settings.php:152
+#: settings.php:210
 msgid "Counts requests from the site and the API. 0 means no limit."
 msgstr ""
 
@@ -240,15 +240,15 @@ msgstr ""
 msgid "Declined"
 msgstr ""
 
-#: settings.php:118
+#: settings.php:176
 msgid "Default minimum nights"
 msgstr ""
 
-#: settings.php:108
+#: settings.php:166
 msgid "Default slot length (minutes)"
 msgstr ""
 
-#: settings.php:103
+#: settings.php:161
 msgid "Defaults and limits"
 msgstr ""
 
@@ -292,15 +292,15 @@ msgstr ""
 msgid "Go to the home page"
 msgstr ""
 
-#: settings.php:190
+#: settings.php:248
 msgid "Guest requests per hour from one IP address"
 msgstr ""
 
-#: settings.php:178
+#: settings.php:236
 msgid "Guests"
 msgstr ""
 
-#: settings.php:127
+#: settings.php:185
 msgid "How far ahead buyers can book (days)"
 msgstr ""
 
@@ -316,15 +316,15 @@ msgstr ""
 msgid "Length of one booking, in minutes"
 msgstr ""
 
-#: settings.php:71
+#: settings.php:129
 msgid "Let buyers book listings for dates or time slots. Choose which categories take bookings; sellers turn it on for each listing from their account. Deactivating the plugin keeps every booking; uninstalling it deletes all bookings and these settings."
 msgstr ""
 
-#: settings.php:183
+#: settings.php:241
 msgid "Let visitors without an account send requests"
 msgstr ""
 
-#: settings.php:146
+#: settings.php:204
 msgid "Limits per buyer"
 msgstr ""
 
@@ -368,11 +368,12 @@ msgstr ""
 msgid "Next month"
 msgstr ""
 
-#: settings.php:28
-msgid "Nights (date range)"
+#: settings.php:27
+#: settings.php:84
+msgid "Nights"
 msgstr ""
 
-#: settings.php:80
+#: settings.php:138
 msgid "Nights suit rentals: buyers pick check-in and check-out dates. Time slots suit services: buyers pick a time within the seller's opening hours. A subcategory follows its parent unless you change it."
 msgstr ""
 
@@ -396,8 +397,8 @@ msgstr ""
 msgid "Now pick your check-out date."
 msgstr ""
 
-#: settings.php:27
-#: settings.php:55
+#: settings.php:83
+#: settings.php:93
 #: views/account.php:201
 msgid "Off"
 msgstr ""
@@ -466,11 +467,11 @@ msgstr ""
 msgid "Requests for your listings"
 msgstr ""
 
-#: settings.php:151
+#: settings.php:209
 msgid "Requests per hour from one account"
 msgstr ""
 
-#: settings.php:26
+#: settings.php:82
 msgid "Same as parent"
 msgstr ""
 
@@ -486,7 +487,7 @@ msgstr ""
 msgid "See your bookings"
 msgstr ""
 
-#: settings.php:109
+#: settings.php:167
 msgid "Sellers can change it for each listing."
 msgstr ""
 
@@ -599,11 +600,11 @@ msgstr ""
 msgid "The seller has closed some of those dates."
 msgstr ""
 
-#: settings.php:43
+#: settings.php:32
 msgid "There are no categories yet."
 msgstr ""
 
-#: settings.php:184
+#: settings.php:242
 msgid "They confirm their e-mail address with a link before the seller sees the request."
 msgstr ""
 
@@ -645,7 +646,8 @@ msgstr ""
 msgid "Thursday"
 msgstr ""
 
-#: settings.php:29
+#: settings.php:28
+#: settings.php:85
 msgid "Time slots"
 msgstr ""
 
@@ -665,36 +667,36 @@ msgstr ""
 msgid "Turn on bookings"
 msgstr ""
 
-#: settings.php:136
+#: settings.php:194
 msgid "Unanswered requests expire after (hours)"
 msgstr ""
 
-#: settings.php:155
-#: settings.php:195
+#: settings.php:213
+#: settings.php:253
 msgid "Use 0 to 1000."
 msgstr ""
 
-#: settings.php:122
+#: settings.php:180
 msgid "Use 1 to %d nights."
 msgstr ""
 
-#: settings.php:164
+#: settings.php:222
 msgid "Use 1 to 100."
 msgstr ""
 
-#: settings.php:173
+#: settings.php:231
 msgid "Use 1 to 1000."
 msgstr ""
 
-#: settings.php:141
+#: settings.php:199
 msgid "Use 1 to 720 hours."
 msgstr ""
 
-#: settings.php:131
+#: settings.php:189
 msgid "Use 1 to 730 days."
 msgstr ""
 
-#: settings.php:113
+#: settings.php:171
 msgid "Use 5 to 720 minutes."
 msgstr ""
 
@@ -706,11 +708,11 @@ msgstr ""
 msgid "Waiting for reply"
 msgstr ""
 
-#: settings.php:169
+#: settings.php:227
 msgid "Waiting requests one buyer may have in all"
 msgstr ""
 
-#: settings.php:160
+#: settings.php:218
 msgid "Waiting requests one buyer may have on one listing"
 msgstr ""
 
@@ -776,6 +778,10 @@ msgstr ""
 
 #: src/Http/Front.php:231
 msgid "Your request was sent. The seller will accept or decline it, and we will e-mail you."
+msgstr ""
+
+#: settings.php:106
+msgid "all follow it"
 msgstr ""
 
 #: views/calendar.php:37

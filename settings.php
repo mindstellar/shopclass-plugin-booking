@@ -19,50 +19,108 @@ use mindstellar\booking\Config;
 
 $d = 'booking';
 
-// The category table posts booking_cat[id] = mode; the hidden field stores it as JSON.
+// Each main category gets an Off / Nights / Time slots switch; its subcategories fold below it.
+// The fields post booking_cat[id] = mode; the hidden field stores them as JSON.
 $categoryTable = static function () use ($d): void {
-    $saved   = Config::parseCategories((string) osc_get_preference('categories', Config::PAGE));
-    $choices = array(
-        Config::INHERIT      => __('Same as parent', $d),
-        Config::OFF          => __('Off', $d),
-        Availability::NIGHTS => __('Nights (date range)', $d),
+    $saved = Config::parseCategories((string) osc_get_preference('categories', Config::PAGE));
+    $modes = array(
+        Availability::NIGHTS => __('Nights', $d),
         Availability::SLOTS  => __('Time slots', $d),
     );
-    $rows = array();
-    $walk = static function (array $nodes, int $depth) use (&$walk, &$rows): void {
-        foreach ($nodes as $node) {
-            $rows[] = array((int) $node['pk_i_id'], (string) $node['s_name'], $depth);
-            if (!empty($node['categories']) && is_array($node['categories'])) {
-                $walk($node['categories'], $depth + 1);
-            }
-        }
-    };
-    $walk(Category::getInstance()->toTree(true), 0);
-
-    if ($rows === array()) {
+    $tree = Category::getInstance()->toTree(true);
+    if ($tree === array()) {
         echo '<p>' . osc_esc_html(__('There are no categories yet.', $d)) . '</p>';
 
         return;
     }
-    echo '<table class="table booking-categories"><thead><tr><th>' . osc_esc_html(__('Category', $d)) . '</th><th>'
-        . osc_esc_html(__('Booking', $d)) . '</th></tr></thead><tbody>';
-    foreach ($rows as [$id, $name, $depth]) {
-        $current = $saved[$id] ?? Config::INHERIT;
-        echo '<tr><td>' . str_repeat('&mdash; ', $depth) . '<label for="booking-cat-' . $id . '">' . osc_esc_html($name) . '</label></td><td>'
-            . '<select class="form-select form-select-sm" id="booking-cat-' . $id . '" name="booking_cat[' . $id . ']">';
-        foreach ($choices as $value => $label) {
-            if ($depth === 0 && $value === Config::INHERIT) {
-                $label = __('Off', $d);
-                $value = Config::INHERIT;
-            } elseif ($depth === 0 && $value === Config::OFF) {
-                continue;
+
+    $flatten = static function (array $nodes, int $depth) use (&$flatten): array {
+        $rows = array();
+        foreach ($nodes as $node) {
+            $rows[] = array((int) $node['pk_i_id'], (string) $node['s_name'], $depth);
+            if (!empty($node['categories']) && is_array($node['categories'])) {
+                $rows = array_merge($rows, $flatten($node['categories'], $depth + 1));
             }
-            echo '<option value="' . osc_esc_html($value) . '"' . ($current === $value || ($depth === 0 && $value === Config::INHERIT && $current === Config::OFF) ? ' selected' : '') . '>'
-                . osc_esc_html($label) . '</option>';
         }
-        echo '</select></td></tr>';
+
+        return $rows;
+    };
+
+    $on = array();
+    foreach ($tree as $top) {
+        $mode = $saved[(int) $top['pk_i_id']] ?? '';
+        if (isset($modes[$mode])) {
+            $on[] = $top['s_name'] . ' (' . $modes[$mode] . ')';
+        }
     }
-    echo '</tbody></table>';
+
+    echo '<style>
+.booking-cats{display:grid;gap:.5rem;max-width:52rem}
+.booking-cats-summary{margin:0 0 .25rem;color:var(--osc-ink-muted,inherit)}
+.booking-cat{border:1px solid var(--osc-rule,rgba(127,127,127,.25));border-radius:.375rem;padding:.6rem .75rem}
+.booking-cat-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.5rem}
+.booking-cat-name{font-weight:600}
+.booking-seg{display:inline-flex;margin:0;padding:2px;border:1px solid var(--osc-rule-strong,rgba(127,127,127,.4));border-radius:.25rem}
+.booking-seg input{position:absolute;opacity:0;pointer-events:none}
+.booking-seg label{padding:.3rem .7rem;border-radius:.25rem;font-size:.875rem;cursor:pointer;white-space:nowrap;color:var(--osc-ink-muted,inherit)}
+.booking-seg label:hover{background:var(--osc-chrome-hover,rgba(127,127,127,.12));color:var(--osc-ink,inherit)}
+.booking-seg input:checked+label{background:var(--osc-bronze-tint,rgba(127,127,127,.2));color:var(--osc-bronze,inherit);font-weight:600}
+.booking-seg input[value=""]:checked+label{background:var(--osc-chrome-hover,rgba(127,127,127,.12));color:var(--osc-ink,inherit)}
+.booking-seg input:focus-visible+label{outline:2px solid currentColor;outline-offset:1px}
+.booking-subs{margin-top:.5rem}
+.booking-subs summary{cursor:pointer;font-size:.875rem;color:var(--osc-ink-muted,inherit)}
+.booking-sub{display:flex;align-items:center;justify-content:space-between;gap:.5rem;padding:.3rem 0;border-top:1px solid var(--osc-rule,rgba(127,127,127,.2))}
+.booking-sub:first-of-type{margin-top:.4rem}
+.booking-sub select{width:auto;min-width:11rem}
+</style>';
+
+    echo '<div class="booking-cats"><p class="booking-cats-summary">' . osc_esc_html($on === array()
+        ? __('Bookings are off in every category.', $d)
+        : sprintf(__('Bookings are on in: %s.', $d), implode(', ', $on))) . '</p>';
+
+    $subChoices = array(
+        Config::INHERIT      => __('Same as parent', $d),
+        Config::OFF          => __('Off', $d),
+        Availability::NIGHTS => __('Nights', $d),
+        Availability::SLOTS  => __('Time slots', $d),
+    );
+    foreach ($tree as $top) {
+        $id      = (int) $top['pk_i_id'];
+        $current = $saved[$id] ?? Config::INHERIT;
+        $name    = (string) $top['s_name'];
+        echo '<div class="booking-cat"><div class="booking-cat-head"><span class="booking-cat-name" id="booking-cat-' . $id . '">'
+            . osc_esc_html($name) . '</span><fieldset class="booking-seg" aria-labelledby="booking-cat-' . $id . '">';
+        foreach (array(Config::INHERIT => __('Off', $d)) + $modes as $value => $label) {
+            $inputId = 'booking-cat-' . $id . '-' . ($value === '' ? 'off' : $value);
+            $checked = $value === $current || ($value === Config::INHERIT && !isset($modes[$current]));
+            echo '<input type="radio" id="' . $inputId . '" name="booking_cat[' . $id . ']" value="' . osc_esc_html($value) . '"'
+                . ($checked ? ' checked' : '') . '><label for="' . $inputId . '">' . osc_esc_html($label) . '</label>';
+        }
+        echo '</fieldset></div>';
+
+        $subs = !empty($top['categories']) && is_array($top['categories']) ? $flatten($top['categories'], 0) : array();
+        if ($subs !== array()) {
+            $changed = count(array_filter($subs, static fn (array $row): bool => ($saved[$row[0]] ?? '') !== ''));
+            echo '<details class="booking-subs"' . ($changed > 0 ? ' open' : '') . '><summary>'
+                . osc_esc_html(sprintf(_n('%d subcategory', '%d subcategories', count($subs), $d), count($subs))
+                    . ($changed > 0 ? ' · ' . sprintf(_n('%d set on its own', '%d set on their own', $changed, $d), $changed) : ' · ' . __('all follow it', $d)))
+                . '</summary>';
+            foreach ($subs as [$subId, $subName, $depth]) {
+                $subCurrent = $saved[$subId] ?? Config::INHERIT;
+                echo '<div class="booking-sub"><label for="booking-cat-' . $subId . '" style="padding-left:' . ($depth * 1.25) . 'rem">'
+                    . osc_esc_html($subName) . '</label><select class="form-select form-select-sm" id="booking-cat-' . $subId
+                    . '" name="booking_cat[' . $subId . ']">';
+                foreach ($subChoices as $value => $label) {
+                    echo '<option value="' . osc_esc_html($value) . '"' . ($subCurrent === $value ? ' selected' : '') . '>'
+                        . osc_esc_html($label) . '</option>';
+                }
+                echo '</select></div>';
+            }
+            echo '</details>';
+        }
+        echo '</div>';
+    }
+    echo '</div>';
 };
 
 return array(
