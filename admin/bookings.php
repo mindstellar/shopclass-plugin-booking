@@ -40,7 +40,8 @@ foreach (Status::all() as $s) {
     $tabs[] = array('label' => Status::label($s), 'url' => $link($s), 'active' => $status === $s, 'count' => $counts[$s]);
 }
 echo '<div class="mb-3">';
-osc_admin_tab_nav($tabs);
+// Core 7.0's tab strip; an older core draws the same links as a link group.
+function_exists('osc_admin_tab_nav') ? osc_admin_tab_nav($tabs) : osc_admin_link_group($tabs);
 echo '</div>';
 
 echo '<div class="table-contains-actions osc-table-stack"><table class="table"><thead><tr>';
