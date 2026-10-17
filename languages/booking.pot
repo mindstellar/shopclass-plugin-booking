@@ -49,6 +49,10 @@ msgstr ""
 msgid "All bookings"
 msgstr ""
 
+#: settings.php:146
+msgid "Allow guest requests"
+msgstr ""
+
 #: src/Http/Front.php:89
 msgid "Almost done: we sent you an e-mail. Open the link in it to send your request."
 msgstr ""
@@ -63,6 +67,10 @@ msgstr ""
 
 #: views/calendar.php:66
 msgid "Book a time"
+msgstr ""
+
+#: settings.php:80
+msgid "Book ahead (days)"
 msgstr ""
 
 #: views/calendar.php:90
@@ -86,7 +94,7 @@ msgstr ""
 msgid "Booking as %1$s, %2$s"
 msgstr ""
 
-#: settings.php:43
+#: settings.php:44
 msgid "Booking by category"
 msgstr ""
 
@@ -128,7 +136,7 @@ msgstr ""
 
 #: admin/bookings.php:36
 #: src/Admin.php:27
-#: src/Admin.php:37
+#: src/Admin.php:42
 #: src/Plugin.php:162
 #: src/Plugin.php:290
 #: views/account.php:98
@@ -155,7 +163,7 @@ msgstr ""
 msgid "Calendar feed"
 msgstr ""
 
-#: src/CalendarSync.php:273
+#: src/CalendarSync.php:274
 msgid "Calendars read: %1$d. Dates closed: %2$d."
 msgstr ""
 
@@ -184,7 +192,7 @@ msgstr ""
 msgid "Cancelled"
 msgstr ""
 
-#: settings.php:38
+#: settings.php:39
 msgid "Categories"
 msgstr ""
 
@@ -200,16 +208,16 @@ msgstr ""
 msgid "Check-out"
 msgstr ""
 
-#: settings.php:95
-msgid "Checked every hour by cron. A request also expires once its start has passed."
-msgstr ""
-
 #: views/calendar.php:91
 msgid "Closed"
 msgstr ""
 
 #: views/account.php:140
 msgid "Closed dates"
+msgstr ""
+
+#: settings.php:91
+msgid "Closes dates busy on Airbnb, Booking.com or any .ics calendar."
 msgstr ""
 
 #: src/Notifier.php:116
@@ -233,16 +241,8 @@ msgstr ""
 msgid "Confirmed"
 msgstr ""
 
-#: src/CalendarSync.php:258
+#: src/CalendarSync.php:259
 msgid "Could not read calendar %1$d (%2$s): %3$s Dates imported before are kept."
-msgstr ""
-
-#: settings.php:149
-msgid "Counted per IP address, or per /64 network for IPv6. 0 means no limit."
-msgstr ""
-
-#: settings.php:110
-msgid "Counts requests from the site and the API. 0 means no limit."
 msgstr ""
 
 #: views/calendar.php:115
@@ -253,6 +253,10 @@ msgstr ""
 msgid "Dates nobody can book"
 msgstr ""
 
+#: settings.php:34
+msgid "Deactivating the plugin keeps every booking. Uninstalling it deletes all bookings and these settings."
+msgstr ""
+
 #: views/account.php:209
 msgid "Decline"
 msgstr ""
@@ -261,15 +265,12 @@ msgstr ""
 msgid "Declined"
 msgstr ""
 
-#: settings.php:69
-msgid "Default minimum nights"
+#: settings.php:61
+#: settings.php:71
+msgid "Default for new listings. Sellers can change it."
 msgstr ""
 
-#: settings.php:59
-msgid "Default slot length (minutes)"
-msgstr ""
-
-#: settings.php:54
+#: settings.php:55
 msgid "Defaults and limits"
 msgstr ""
 
@@ -297,7 +298,7 @@ msgstr ""
 msgid "Every booking is listed under Plugins → Bookings."
 msgstr ""
 
-#: src/Admin.php:38
+#: src/Admin.php:43
 msgid "Every booking on the site. Sellers accept or decline requests from their account; requests nobody answers expire on their own."
 msgstr ""
 
@@ -325,16 +326,16 @@ msgstr ""
 msgid "Go to the home page"
 msgstr ""
 
-#: settings.php:148
-msgid "Guest requests per hour from one IP address"
+#: settings.php:153
+msgid "Guest requests per hour"
 msgstr ""
 
-#: settings.php:136
+#: settings.php:141
 msgid "Guests"
 msgstr ""
 
-#: settings.php:78
-msgid "How far ahead buyers can book (days)"
+#: settings.php:81
+msgid "How far ahead buyers can book."
 msgstr ""
 
 #: admin/bookings.php:47
@@ -357,19 +358,15 @@ msgstr ""
 msgid "Length of one booking, in minutes"
 msgstr ""
 
-#: settings.php:35
-msgid "Let buyers book listings for dates or time slots. Choose which categories take bookings; sellers turn it on for each listing from their account. Deactivating the plugin keeps every booking; uninstalling it deletes all bookings and these settings."
+#: settings.php:36
+msgid "Let buyers book listings for dates or time slots. Sellers turn it on for each listing."
 msgstr ""
 
-#: settings.php:87
-msgid "Let sellers import other calendars"
+#: settings.php:90
+msgid "Let sellers import calendars"
 msgstr ""
 
-#: settings.php:141
-msgid "Let visitors without an account send requests"
-msgstr ""
-
-#: settings.php:104
+#: settings.php:107
 msgid "Limits per buyer"
 msgstr ""
 
@@ -393,6 +390,7 @@ msgstr ""
 msgid "Message to the seller (optional)"
 msgstr ""
 
+#: settings.php:70
 #: views/account.php:114
 msgid "Minimum nights"
 msgstr ""
@@ -417,12 +415,12 @@ msgstr ""
 msgid "Next month"
 msgstr ""
 
-#: settings.php:46
+#: settings.php:47
 msgid "Nights"
 msgstr ""
 
-#: settings.php:44
-msgid "Nights suit rentals: buyers pick check-in and check-out dates. Time slots suit services: buyers pick a time within the seller's opening hours. A subcategory follows its parent unless you change it."
+#: settings.php:45
+msgid "Nights: buyers pick dates. Time slots: buyers pick a time."
 msgstr ""
 
 #: admin/bookings.php:52
@@ -461,8 +459,16 @@ msgstr ""
 msgid "One per line: a date like 2026-12-24, or a range like 2026-12-24..2026-12-31."
 msgstr ""
 
-#: src/CalendarSync.php:275
+#: src/CalendarSync.php:276
 msgid "Only the first %d events of a calendar are read."
+msgstr ""
+
+#: settings.php:131
+msgid "Open in total"
+msgstr ""
+
+#: settings.php:121
+msgid "Open per listing"
 msgstr ""
 
 #: views/account.php:121
@@ -475,6 +481,14 @@ msgstr ""
 
 #: views/account.php:150
 msgid "Paste the calendar address (.ics) from Airbnb, Booking.com, Google Calendar and so on, one per line, up to 3. Dates booked there are closed here. Checked every hour."
+msgstr ""
+
+#: settings.php:154
+msgid "Per IP address (per /64 for IPv6). 0 means no limit."
+msgstr ""
+
+#: settings.php:113
+msgid "Per account, site and API together. 0 means no limit."
 msgstr ""
 
 #: views/calendar.php:136
@@ -525,12 +539,16 @@ msgstr ""
 msgid "Price note"
 msgstr ""
 
+#: settings.php:97
+msgid "Request expiry (hours)"
+msgstr ""
+
 #: views/account.php:192
 msgid "Requests for your listings"
 msgstr ""
 
-#: settings.php:109
-msgid "Requests per hour from one account"
+#: settings.php:112
+msgid "Requests per hour"
 msgstr ""
 
 #: views/account.php:89
@@ -543,14 +561,6 @@ msgstr ""
 
 #: src/Notifier.php:92
 msgid "See your bookings"
-msgstr ""
-
-#: settings.php:60
-msgid "Sellers can change it for each listing."
-msgstr ""
-
-#: settings.php:88
-msgid "Sellers paste calendar addresses (.ics) from Airbnb, Booking.com and so on, and this site reads them every hour to close those busy dates. Off by default. Switched off, imported dates are ignored until it is on again."
 msgstr ""
 
 #: settings.php:27
@@ -570,7 +580,7 @@ msgid "Send my booking request"
 msgstr ""
 
 #: src/Admin.php:28
-#: src/Admin.php:40
+#: src/Admin.php:45
 msgid "Settings"
 msgstr ""
 
@@ -584,6 +594,10 @@ msgstr ""
 
 #: views/calendar.php:148
 msgid "Sign in to send a booking request."
+msgstr ""
+
+#: settings.php:60
+msgid "Slot length (minutes)"
 msgstr ""
 
 #: src/BookingException.php:47
@@ -679,10 +693,6 @@ msgstr ""
 msgid "The seller has closed some of those dates."
 msgstr ""
 
-#: settings.php:142
-msgid "They confirm their e-mail address with a link before the seller sees the request."
-msgstr ""
-
 #: src/Notifier.php:192
 msgid "This booking is confirmed."
 msgstr ""
@@ -721,7 +731,7 @@ msgstr ""
 msgid "Thursday"
 msgstr ""
 
-#: settings.php:47
+#: settings.php:48
 msgid "Time slots"
 msgstr ""
 
@@ -749,37 +759,41 @@ msgstr ""
 msgid "Two requests for the same time cannot both be accepted."
 msgstr ""
 
-#: settings.php:94
-msgid "Unanswered requests expire after (hours)"
+#: settings.php:98
+msgid "Unanswered requests expire after this, or once their start has passed."
 msgstr ""
 
-#: settings.php:113
-#: settings.php:153
+#: settings.php:116
+#: settings.php:158
 msgid "Use 0 to 1000."
 msgstr ""
 
-#: settings.php:73
+#: settings.php:75
 msgid "Use 1 to %d nights."
 msgstr ""
 
-#: settings.php:122
+#: settings.php:126
 msgid "Use 1 to 100."
 msgstr ""
 
-#: settings.php:131
+#: settings.php:136
 msgid "Use 1 to 1000."
 msgstr ""
 
-#: settings.php:99
+#: settings.php:102
 msgid "Use 1 to 720 hours."
 msgstr ""
 
-#: settings.php:82
+#: settings.php:85
 msgid "Use 1 to 730 days."
 msgstr ""
 
-#: settings.php:64
+#: settings.php:65
 msgid "Use 5 to 720 minutes."
+msgstr ""
+
+#: settings.php:147
+msgid "Visitors without an account confirm their e-mail before the seller sees it."
 msgstr ""
 
 #: views/account.php:180
@@ -790,12 +804,12 @@ msgstr ""
 msgid "Waiting for reply"
 msgstr ""
 
-#: settings.php:127
-msgid "Waiting requests one buyer may have in all"
+#: settings.php:132
+msgid "Waiting requests one buyer may have across the site."
 msgstr ""
 
-#: settings.php:118
-msgid "Waiting requests one buyer may have on one listing"
+#: settings.php:122
+msgid "Waiting requests one buyer may have on one listing."
 msgstr ""
 
 #: views/calendar.php:144
@@ -811,7 +825,7 @@ msgid "When"
 msgstr ""
 
 #: settings.php:32
-msgid "With calendar import on (Defaults and limits), sellers can import the calendars of the same place on Airbnb, Booking.com or Google Calendar. Their busy dates are closed here, checked every hour by cron."
+msgid "With calendar import on, sellers can import the calendars of the same place on Airbnb, Booking.com or Google Calendar. Their busy dates are closed here, checked every hour by cron."
 msgstr ""
 
 #: src/BookingException.php:73
@@ -892,11 +906,11 @@ msgid "it is this site's own address. Paste the calendar from the other site."
 msgstr ""
 
 #: src/CalendarSync.php:155
-#: src/CalendarSync.php:300
+#: src/CalendarSync.php:301
 msgid "it points to a private network."
 msgstr ""
 
-#: src/CalendarSync.php:313
+#: src/CalendarSync.php:314
 msgid "no answer came, or the file is over 2 MB."
 msgstr ""
 
@@ -910,15 +924,15 @@ msgstr ""
 
 #: src/CalendarSync.php:152
 #: src/CalendarSync.php:158
-#: src/CalendarSync.php:315
+#: src/CalendarSync.php:316
 msgid "that is not a calendar address."
 msgstr ""
 
-#: src/CalendarSync.php:296
+#: src/CalendarSync.php:297
 msgid "the address could not be found."
 msgstr ""
 
-#: src/CalendarSync.php:321
+#: src/CalendarSync.php:322
 msgid "the address does not give a calendar file."
 msgstr ""
 
@@ -926,7 +940,7 @@ msgstr ""
 msgid "the address is longer than %d characters."
 msgstr ""
 
-#: src/CalendarSync.php:318
+#: src/CalendarSync.php:319
 msgid "the other site answered with error %d."
 msgstr ""
 
