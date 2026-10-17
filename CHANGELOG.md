@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.0
+
+### Changed
+- Settings use short labels with one line of help each.
+- The Bookings status tabs scroll on a phone, using core's tab strip.
+
 ## 0.1.0
 
 ### New
