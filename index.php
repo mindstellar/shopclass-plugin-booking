@@ -3,7 +3,7 @@
 Plugin Name: Booking Calendar
 Plugin URI: https://github.com/mindstellar/shopclass-plugin-booking
 Description: Let buyers book a listing for dates or a time slot, with an availability calendar, seller approval, e-mails and a calendar feed. Choose the categories in its settings.
-Version: 0.2.0
+Version: 0.2.1
 Author: Navjot Tomer (Mindstellar)
 Author URI: https://mindstellar.com
 Short Name: booking
