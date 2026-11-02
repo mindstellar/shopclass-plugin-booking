@@ -120,6 +120,12 @@ if (!function_exists('osc_current_user_locale')) {
         return 'en_US';
     }
 }
+if (!function_exists('osc_current_ui_locale')) {
+    function osc_current_ui_locale(): string
+    {
+        return 'en_US';
+    }
+}
 
 spl_autoload_register(static function (string $class): void {
     $prefix = 'mindstellar\\booking\\';
