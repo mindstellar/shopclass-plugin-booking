@@ -132,7 +132,7 @@ final class Front
         }
         header('Cache-Control: private, no-store');
         header('Referrer-Policy: no-referrer');
-        View::newInstance()->_exportVariableToView('booking_link', $link);
+        View::getInstance()->_exportVariableToView('booking_link', $link);
         osc_gui_view('', dirname(__DIR__, 2) . '/views/guest.php', array('heading' => $heading, 'title' => $heading));
     }
 

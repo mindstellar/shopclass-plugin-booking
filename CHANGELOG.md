@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.2
+
+### Changed
+- Uses `getInstance()` in place of the deprecated `newInstance()`.
+
 ## 0.2.1
 
 ### Changed
